@@ -1,0 +1,33 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource sqlite {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model List {
+  id    String @id
+  books Book[]
+  date DateTime
+  url String?
+  wrapped Boolean @default(false)
+}
+
+model Book {
+  id             Int      @id @default(autoincrement())
+  title          String
+  author         String
+  goodReadsLink  String
+  coverImage     String
+  rating         Float
+  pages          Float
+  dateRead       DateTime
+  average_rating Float
+  list           List     @relation(fields: [listId], references: [id])
+  listId         String
+}
