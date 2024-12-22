@@ -47,7 +47,7 @@ export async function loader({ request }: { request: Request }) {
   try {
     const feedUrl = String(session.get("listId"));
 
-    const books = await prisma.book.findMany({ where: { listId: feedUrl } });
+    const books = await prisma.book.findMany({ where: { listId: feedUrl }, orderBy: { dateRead: 'asc' } });
     return Response.json(
       { books },
       {
