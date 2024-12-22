@@ -15,6 +15,7 @@ import {
 import { motion } from "motion/react";
 import Intro from "~/components/introAnim";
 import IntroAnim from "~/components/introAnim";
+import BookItem from "~/components/BookItem";
 
 // Define the type of data the loader returns
 interface LoaderData {
@@ -40,23 +41,23 @@ export async function loader({ request }: { request: Request }) {
       subHeading = "No books found. Time to start reading!";
       break;
       case data.numberOfBooks === 1:
-      subHeading = "Only one book found. Keep going!";
+      subHeading = "Only one book found. That's all you managed in a year?";
       break;
-      case data.numberOfBooks === 5:
-      subHeading = "Five books found. Great job!";
+      case data.numberOfBooks === 12:
+      subHeading = "A book a month! Not bad, but you can do better!";
       break;
-      case data.numberOfBooks >= 10 && data.numberOfBooks <= 20:
-      subHeading = "Between 10 and 20 books found. Impressive!";
+      case data.numberOfBooks >= 10 && data.numberOfBooks <= 30:
+      subHeading = "Nice!" + data.numberOfBooks + " books read.";
       break;
-      case data.numberOfBooks > 40:
-      subHeading = "More than 40 books found. You're a reading machine!";
+      case data.numberOfBooks > 52:
+      subHeading = "More than a book a week! Great job!";
       break;
       default:
-      subHeading = "Keep up the good work!";
+      subHeading = "You somehow broke this!";
     }
 
     return Response.json(
-      { data: data, subHeading: subHeading },
+      { data: data, subHeading: subHeading, bookList: bookList },
       {
       headers: {
         "Set-Cookie": await commitSession(session),
@@ -73,11 +74,12 @@ export async function loader({ request }: { request: Request }) {
 
 // Main component
 export default function Index() {
-  const { data, subHeading } = useLoaderData() as any;
+  const { data, subHeading, bookList } = useLoaderData() as any;
 
   return (
     <div className="flex flex-col items-center justify-center h-screen w-screen">
       <IntroAnim subtitle={subHeading} />
+      <BookItem imageUrl={bookList[0].coverImage} title={bookList[0].title} />
     </div>
   );
 }
