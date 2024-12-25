@@ -6,6 +6,7 @@ export interface BookItem {
   title: string;
   author: string;
   link: string;
+  thumbnail: string;
   coverImage: string;
   rating: number;
   pages: number;
@@ -66,6 +67,7 @@ function extractGoodReadsBook(item: any): BookItem {
     title: item.title || "Unknown title",
     author: item.author_name || "Unknown author",
     link: item.link || "",
+    thumbnail: item.book_image_url || "",
     coverImage: item.book_image_url || "",
     rating: parseFloat(item.user_rating),
     pages: parseFloat(item.book?.num_pages),
