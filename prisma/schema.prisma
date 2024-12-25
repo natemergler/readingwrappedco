@@ -29,6 +29,7 @@ model Book {
   pages          Float
   dateRead       DateTime
   average_rating Float
+  isbn           String?
   list           List     @relation(fields: [listId], references: [id])
   wrapper        Wrapper? @relation(fields: [wrapperId], references: [id])
   wrapperId      String?

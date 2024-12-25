@@ -12,6 +12,7 @@ export interface BookItem {
   pages: number;
   dateRead: Date;
   average_rating: number;
+  isbn: string;
 }
 
 export async function parseRSS(feedContent: string): Promise<BookItem[]> {
@@ -73,6 +74,7 @@ function extractGoodReadsBook(item: any): BookItem {
     pages: parseFloat(item.book?.num_pages),
     dateRead: new Date(item.user_read_at) || "",
     average_rating: parseFloat(item.average_rating),
+    isbn: item.isbn || "",
   };
 }
 
@@ -100,10 +102,12 @@ export async function createBookIfNeeded(
         author: bookItem.author,
         goodReadsLink: bookItem.link,
         coverImage: bookItem.coverImage,
+        thumbnail: bookItem.thumbnail,
         rating: bookItem.rating,
         pages: bookItem.pages,
         dateRead: bookItem.dateRead,
         average_rating: bookItem.average_rating,
+        isbn: bookItem.isbn,
         listId: feedContent,
       },
     });
@@ -130,11 +134,13 @@ export async function addSearchedBook(
         title: bookItem.title,
         author: bookItem.author,
         goodReadsLink: bookItem.link,
+        thumbnail: bookItem.thumbnail,
         coverImage: bookItem.coverImage,
         rating: bookItem.rating,
         pages: bookItem.pages,
         dateRead: bookItem.dateRead,
         average_rating: bookItem.average_rating,
+        isbn: bookItem.isbn,
         listId: feedContent,
       },
     });
