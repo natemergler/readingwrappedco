@@ -1,6 +1,7 @@
 // Define the structure of a parsed book item
 import { XMLParser } from "fast-xml-parser";
 import { prisma } from "~/db.server";
+import { addCoverImage } from "./googlebooks";
 
 export interface BookItem {
   title: string;
@@ -96,6 +97,8 @@ export async function createBookIfNeeded(
       },
     })) === null
   ) {
+    bookItem = await addCoverImage(bookItem);
+
     await prisma.book.create({
       data: {
         title: bookItem.title,
@@ -107,7 +110,7 @@ export async function createBookIfNeeded(
         pages: bookItem.pages,
         dateRead: bookItem.dateRead,
         average_rating: bookItem.average_rating,
-        isbn: bookItem.isbn,
+        isbn: String(bookItem.isbn),
         listId: feedContent,
       },
     });

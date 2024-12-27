@@ -1,5 +1,6 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
+import { BookItem } from './rssParser';
 
 dotenv.config();
 
@@ -44,9 +45,41 @@ export async function parseGoogleBooksResponse(response: any) {
       pages: volumeInfo.pageCount,
       dateRead: new Date(),
       average_rating: volumeInfo.averageRating || 0,
-      isbn: isbn,
+      isbn: String(isbn),
     };
   });
   return books;
 }
 
+export async function addCoverImage(book: BookItem) {
+  if (!book.title || !book.author) {
+    console.error('Missing required book information');
+    return book;
+  }
+
+  const encodedQuery = encodeURIComponent(`${book.title} author:${book.author} isbn:${book.isbn}`);
+  const query = `https://www.googleapis.com/books/v1/volumes?q=${encodedQuery}&key=${GOOGLE_API_KEY}&maxResults=10`;
+
+  try {
+    const response = await axios.get(query);
+    if (!response.data.items?.length) {
+      return book;
+    }
+
+    const items = response.data.items;
+    const bestMatch = items.find((item: { volumeInfo: { title: string; }; }) => 
+      item.volumeInfo?.title?.toLowerCase().includes(book.title.toLowerCase())
+    ) || items[0];
+
+    if (bestMatch?.volumeInfo?.imageLinks) {
+      book.coverImage = bestMatch.volumeInfo.imageLinks.medium || 
+                       bestMatch.volumeInfo.imageLinks.small || 
+                       bestMatch.volumeInfo.imageLinks.thumbnail;
+    }
+
+    return book;
+  } catch (error) {
+    console.error('Error fetching cover image:', error);
+    return book;
+  }
+}

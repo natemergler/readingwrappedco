@@ -38,39 +38,36 @@ export async function loader({ request }: { request: Request }) {
 
     switch (true) {
       case data.numberOfBooks === 0:
-      subHeading = "No books found. Time to start reading!";
-      break;
+        subHeading = "No books found. Time to start reading!";
+        break;
       case data.numberOfBooks === 1:
-      subHeading = "Only one book found. That's all you managed in a year?";
-      break;
+        subHeading = "Only one book found. That's all you managed in a year?";
+        break;
       case data.numberOfBooks === 12:
-      subHeading = "A book a month! Not bad, but you can do better!";
-      break;
+        subHeading = "A book a month! Not bad, but you can do better!";
+        break;
       case data.numberOfBooks >= 10 && data.numberOfBooks <= 30:
-      subHeading = "Nice!" + data.numberOfBooks + " books read.";
-      break;
+        subHeading = "Nice!" + data.numberOfBooks + " books read.";
+        break;
       case data.numberOfBooks > 52:
-      subHeading = "More than a book a week! Great job!";
-      break;
+        subHeading = "More than a book a week! Great job!";
+        break;
       default:
-      subHeading = "You somehow broke this!";
+        subHeading = "You somehow broke this!";
     }
 
     return Response.json(
       { data: data, subHeading: subHeading, bookList: bookList },
       {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      },
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
       }
     );
-
   } catch (e) {}
 
   return Response.json({ error: "No Feed URL provided" });
 }
-
-
 
 // Main component
 export default function Index() {
@@ -79,7 +76,13 @@ export default function Index() {
   return (
     <div className="flex flex-col items-center justify-center h-screen w-screen">
       <IntroAnim subtitle={subHeading} />
-      <BookItem imageUrl={bookList[0].coverImage} title={bookList[0].title} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+        {bookList.map((book: Book) => (
+          <div key={book.id}>
+            <BookItem imageUrl={book.coverImage} title={book.title} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
