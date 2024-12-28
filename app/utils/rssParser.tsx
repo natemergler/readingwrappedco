@@ -1,7 +1,7 @@
 // Define the structure of a parsed book item
 import { XMLParser } from "fast-xml-parser";
 import { prisma } from "~/db.server";
-import { addCoverImage } from "./googlebooks";
+import { addCoverImage, returnCoverImage } from "./googlebooks";
 
 export interface BookItem {
   title: string;
@@ -97,14 +97,15 @@ export async function createBookIfNeeded(
       },
     })) === null
   ) {
-    bookItem = await addCoverImage(bookItem);
+    const coverImage = await returnCoverImage(bookItem);
+    console.log(coverImage);
 
     await prisma.book.create({
       data: {
         title: bookItem.title,
         author: bookItem.author,
         goodReadsLink: bookItem.link,
-        coverImage: bookItem.coverImage,
+        coverImage: coverImage,
         thumbnail: bookItem.thumbnail,
         rating: bookItem.rating,
         pages: bookItem.pages,

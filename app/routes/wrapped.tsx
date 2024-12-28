@@ -1,19 +1,9 @@
-import type { MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
-import { getSession, commitSession, destroySession } from "../sessions";
+import { getSession, commitSession } from "../sessions";
 import { prisma } from "~/db.server";
-import { List, Book } from "@prisma/client";
+import { Book } from "@prisma/client";
 import { wrapItUp } from "~/utils/wrapItUp";
-import CardItem from "~/components/cardItem"; // Updated import statement
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from "~/components/ui/carousel";
 import { motion } from "motion/react";
-import Intro from "~/components/introAnim";
 import IntroAnim from "~/components/introAnim";
 import BookItem from "~/components/BookItem";
 
@@ -78,9 +68,15 @@ export default function Index() {
       <IntroAnim subtitle={subHeading} />
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
         {bookList.map((book: Book) => (
-          <div key={book.id}>
+            <motion.div
+            key={book.id}
+            initial={{ scaleY: 0 }}
+            animate={{ scaleY: 1 }}
+            transition={{ type: "spring", bounce: 0.4, delay: bookList.indexOf(book) }}
+            whileInView={{ scaleY: 1 }}
+            >
             <BookItem imageUrl={book.coverImage} title={book.title} />
-          </div>
+            </motion.div>
         ))}
       </div>
     </div>
