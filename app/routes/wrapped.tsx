@@ -64,7 +64,7 @@ export default function Index() {
   const { data, subHeading, bookList } = useLoaderData() as any;
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen w-screen">
+    <div className="flex flex-col items-center justify-center h-screen w-screen p-4">
       <IntroAnim subtitle={subHeading} />
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
         {bookList.map((book: Book) => (

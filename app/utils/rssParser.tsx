@@ -83,8 +83,7 @@ export async function createBookIfNeeded(
   bookItem: BookItem,
   feedContent: string
 ): Promise<void> {
-  const thisYear = new Date().getFullYear();
-  const thresholdDate = new Date(thisYear, 0, 1);
+  const thresholdDate = new Date(2024, 0, 1);
   if (
     bookItem.dateRead > thresholdDate &&
     (await prisma.book.findFirst({
