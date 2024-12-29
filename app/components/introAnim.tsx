@@ -1,11 +1,12 @@
 import { Link } from "lucide-react";
 import { motion } from "motion/react";
+import NumberTicker from "./ui/basic-number-ticker";
 
 interface IntroProps {
-  subtitle?: string;
+  subtitle?: number;
 }
 
-export default function IntroAnim({ subtitle = "Wow, books book books" }: IntroProps) {
+export default function IntroAnim({ subtitle = 0 }: IntroProps) {
   return (
     <motion.div
       animate={{ x: 300 }}
@@ -26,9 +27,17 @@ export default function IntroAnim({ subtitle = "Wow, books book books" }: IntroP
         animate={{ scaleY: 1 }}
         transition={{ type: "spring", bounce: 0.4, delay: 1 }}
         className="text-3xl font-normal my-10"
-        
       >
-        {subtitle}
+        <NumberTicker
+          from={0}
+          target={subtitle}
+          transition={{
+            duration: 5,
+            type: "tween",
+            ease: "linear",
+          }}
+        ></NumberTicker>
+        &nbsp;Books Read
       </motion.h3>
     </motion.div>
   );

@@ -97,7 +97,6 @@ export async function createBookIfNeeded(
     })) === null
   ) {
     const coverImage = await returnCoverImage(bookItem);
-    console.log(coverImage);
 
     await prisma.book.create({
       data: {

@@ -24,30 +24,9 @@ export async function loader({ request }: { request: Request }) {
     });
     const bookList = await prisma.book.findMany({ where: { listId: list.id } });
     const data = wrapItUp(bookList);
-    let subHeading = "";
-
-    switch (true) {
-      case data.numberOfBooks === 0:
-        subHeading = "No books found. Time to start reading!";
-        break;
-      case data.numberOfBooks === 1:
-        subHeading = "Only one book found. That's all you managed in a year?";
-        break;
-      case data.numberOfBooks === 12:
-        subHeading = "A book a month! Not bad, but you can do better!";
-        break;
-      case data.numberOfBooks >= 10 && data.numberOfBooks <= 30:
-        subHeading = "Nice!" + data.numberOfBooks + " books read.";
-        break;
-      case data.numberOfBooks > 52:
-        subHeading = "More than a book a week! Great job!";
-        break;
-      default:
-        subHeading = "You somehow broke this!";
-    }
 
     return Response.json(
-      { data: data, subHeading: subHeading, bookList: bookList },
+      { data: data, bookList: bookList },
       {
         headers: {
           "Set-Cookie": await commitSession(session),
@@ -62,18 +41,18 @@ export async function loader({ request }: { request: Request }) {
 // Main component
 export default function Index() {
   const { data, subHeading, bookList } = useLoaderData() as any;
+  
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen w-screen p-4">
-      <IntroAnim subtitle={subHeading} />
+    <div className="flex flex-col items-center justify-center w-screen m-4">
+      <IntroAnim subtitle={bookList.length} />
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
         {bookList.map((book: Book) => (
             <motion.div
             key={book.id}
             initial={{ scaleY: 0 }}
             animate={{ scaleY: 1 }}
-            transition={{ type: "spring", bounce: 0.4, delay: bookList.indexOf(book) }}
-            whileInView={{ scaleY: 1 }}
+            transition={{ type: "spring", bounce: 0.4, delay: (bookList.indexOf(book)/bookList.length) * 5 }}
             >
             <BookItem imageUrl={book.coverImage} title={book.title} />
             </motion.div>

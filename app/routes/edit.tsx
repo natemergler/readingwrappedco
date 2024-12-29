@@ -197,7 +197,7 @@ export default function Edit() {
         {formData?.searchBooks && (
           <div>
             <Table>
-              <TableCaption>Search Results</TableCaption>
+              <TableCaption>Search Results — If your result is not found, try more specific search terms.</TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Cover</TableHead>

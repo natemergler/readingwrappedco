@@ -9,8 +9,8 @@ const BookItem = ({ imageUrl, title }: BookItemProps) => {
             <div className="transform transition-transform hover:scale-105">
                 <div className="w-32 h-48 relative shadow-lg hover:shadow-xl rounded">
                     <img
-                        src={imageUrl}
-                        alt={`Cover of ${title}`}
+                        src={imageUrl || 'https://dryofg8nmyqjw.cloudfront.net/images/no-cover.png'}
+                        alt={imageUrl ? `Cover of ${title}` : 'No cover image'}
                         className="w-full h-full object-cover rounded transform perspective-800 rotate-y-3 hover:rotate-y-0 transition-transform duration-300"
                     />
                 </div>
