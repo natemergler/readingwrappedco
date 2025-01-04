@@ -40,13 +40,14 @@ export async function loader({ request }: { request: Request }) {
 
 // Main component
 export default function Index() {
-  const { data, subHeading, bookList } = useLoaderData() as any;
+  const { data, bookList } = useLoaderData() as any;
   
 
   return (
     <div className="flex flex-col items-center justify-center w-screen m-4">
-      <IntroAnim subtitle={bookList.length} />
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+      <IntroAnim booksCount={bookList.length} pages={data.totalPages} />
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6
+       gap-4 p-4">
         {bookList.map((book: Book) => (
             <motion.div
             key={book.id}
