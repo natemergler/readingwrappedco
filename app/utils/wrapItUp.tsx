@@ -11,6 +11,7 @@ export function wrapItUp(bookList: Book[]) {
   .filter(book => book.rating > 0)
   .reduce((max, book) => book.rating > max.rating ? book : max, bookList[0]);
   const averageRating = bookList.reduce((total, book) => total + book.rating, 0) / numberOfBooks;
+  const totalStars = bookList.reduce((total, book) => total + book.rating, 0);
 
   return {
     numberOfBooks,
@@ -18,6 +19,7 @@ export function wrapItUp(bookList: Book[]) {
     lowestRatedBook,
     highestRatedBook,
     averageRating,
+    totalStars
   };
 }
 
