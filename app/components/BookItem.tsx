@@ -1,3 +1,5 @@
+import { motion } from "motion/react";
+
 interface BookItemProps {
   imageUrl: string;
   title: string;
@@ -19,9 +21,9 @@ const BookItem = ({ imageUrl, title }: BookItemProps) => {
           />
         </div>
       </div>
-      <h3 className="text-sm font-medium text-gray-800 text-center max-w-[128px] line-clamp-2">
+      <motion.h3 className="text-sm font-medium text-gray-800 text-center max-w-[128px] line-clamp-2">
         {title}
-      </h3>
+      </motion.h3>
     </div>
   );
 };

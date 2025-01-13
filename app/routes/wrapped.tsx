@@ -60,7 +60,7 @@ export default function Index() {
             <motion.div
               drag
               dragConstraints={constraintsRef}
-              dragElastic={0.1}
+              dragElastic={0.9}
               whileDrag={{ scale: 0.9 }}
               key={book.id}
               initial={{ scaleY: 0, x:-100 }}
