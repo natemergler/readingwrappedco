@@ -50,7 +50,9 @@ import {
       ref
     ) => {
       const count = useMotionValue(from)
-      const rounded = useTransform(count, (latest) => Math.round(latest))
+      const rounded = useTransform(count, (latest) => 
+        Math.round(latest).toLocaleString('en-US')
+      )
       const [controls, setControls] = useState<AnimationPlaybackControls | null>(
         null
       )
@@ -103,4 +105,3 @@ import {
   //    <NumberTicker ref={tickerRef} from={0} target={100} autoStart={false} />
   // 3. Call the startAnimation function:
   //    tickerRef.current?.startAnimation();
-  
