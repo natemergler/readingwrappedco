@@ -7,9 +7,9 @@ interface BookItemProps {
 
 const BookItem = ({ imageUrl, title }: BookItemProps) => {
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="items-center gap-2 book-item">
       <div className="transform transition-transform hover:scale-105">
-        <div className="w-32 h-48 relative shadow-lg hover:shadow-xl rounded">
+        <div className="relative shadow-lg hover:shadow-xl rounded">
           <img
             draggable="false"
             src={
@@ -21,9 +21,6 @@ const BookItem = ({ imageUrl, title }: BookItemProps) => {
           />
         </div>
       </div>
-      <motion.h3 className="text-sm font-medium text-gray-800 text-center max-w-[128px] line-clamp-2">
-        {title}
-      </motion.h3>
     </div>
   );
 };
