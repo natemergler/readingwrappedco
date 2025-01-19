@@ -11,11 +11,11 @@ datasource db {
 }
 
 model List {
-  id    String @id
-  books Book[]
-  date DateTime
-  url String?
-  wrapped Boolean @default(false)
+  id      String   @id
+  books   Book[]
+  date    DateTime
+  url     String?
+  wrapped Boolean  @default(false)
 }
 
 model Book {
@@ -23,11 +23,23 @@ model Book {
   title          String
   author         String
   goodReadsLink  String
+  thumbnail      String
   coverImage     String
   rating         Float
   pages          Float
   dateRead       DateTime
   average_rating Float
+  isbn           String?
   list           List     @relation(fields: [listId], references: [id])
+  wrapper        Wrapper? @relation(fields: [wrapperId], references: [id])
+  wrapperId      String?
   listId         String
+}
+
+model Wrapper {
+  id        String   @id
+  booksRead Book[]
+  date      DateTime
+  url       String?
+  wrapped   Boolean  @default(false)
 }

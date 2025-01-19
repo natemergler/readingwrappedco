@@ -66,30 +66,37 @@ export async function action({ request }: ActionFunctionArgs) {
   const listId = session.get("listId");
   const formData = await request.formData();
   const bookId = formData.get("bookId");
-  if (formData.get("rating")) {
-    await prisma.book.update({
-      where: { id: parseInt(formData.get("bookId") as string) },
-      data: { rating: parseInt(formData.get("rating") as string) },
-    });
-    return Response.json({ ok: true });
-  }
-  if (formData.get("delete")) {
-    await prisma.book.delete({
-      where: { id: parseInt(formData.get("bookId") as string) },
-    });
-    return Response.json({ ok: true });
-  }
+  const action = formData.get("rating") ? "rating" :
+                 formData.get("delete") ? "delete" :
+                 formData.get("search") ? "search" :
+                 formData.get("add") ? "add" : null;
 
-  if (formData.get("search")) {
-    const search = await searchBooks(formData.get("search") as string);
-    const searchedBooks = await parseGoogleBooksResponse(search);
-    return Response.json({ searchBooks: searchedBooks });
-  }
+  switch (action) {
+    case "rating":
+      await prisma.book.update({
+        where: { id: parseInt(formData.get("bookId") as string) },
+        data: { rating: parseInt(formData.get("rating") as string) },
+      });
+      return Response.json({ ok: true });
 
-  if (formData.get("add")) {
-    const book = JSON.parse(formData.get("add") as string);
-    await addSearchedBook(book, listId as string);
-    return Response.json({ ok: true });
+    case "delete":
+      await prisma.book.delete({
+        where: { id: parseInt(formData.get("bookId") as string) },
+      });
+      return Response.json({ ok: true });
+
+    case "search":
+      const search = await searchBooks(formData.get("search") as string);
+      const searchedBooks = await parseGoogleBooksResponse(search);
+      return Response.json({ searchBooks: searchedBooks });
+
+    case "add":
+      const book = JSON.parse(formData.get("add") as string);
+      await addSearchedBook(book, listId as string);
+      return Response.json({ ok: true });
+
+    default:
+      return Response.json({ error: "Invalid action" });
   }
   return Response.json({ ok: true });
 }
@@ -190,7 +197,7 @@ export default function Edit() {
         {formData?.searchBooks && (
           <div>
             <Table>
-              <TableCaption>Search Results</TableCaption>
+              <TableCaption>Search Results — If your result is not found, try more specific search terms.</TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Cover</TableHead>

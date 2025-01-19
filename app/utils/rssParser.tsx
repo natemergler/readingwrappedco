@@ -1,16 +1,19 @@
 // Define the structure of a parsed book item
 import { XMLParser } from "fast-xml-parser";
 import { prisma } from "~/db.server";
+import { addCoverImage, returnCoverImage } from "./googlebooks";
 
 export interface BookItem {
   title: string;
   author: string;
   link: string;
+  thumbnail: string;
   coverImage: string;
   rating: number;
   pages: number;
   dateRead: Date;
   average_rating: number;
+  isbn: string;
 }
 
 export async function parseRSS(feedContent: string): Promise<BookItem[]> {
@@ -66,11 +69,13 @@ function extractGoodReadsBook(item: any): BookItem {
     title: item.title || "Unknown title",
     author: item.author_name || "Unknown author",
     link: item.link || "",
+    thumbnail: item.book_image_url || "",
     coverImage: item.book_image_url || "",
     rating: parseFloat(item.user_rating),
     pages: parseFloat(item.book?.num_pages),
     dateRead: new Date(item.user_read_at) || "",
     average_rating: parseFloat(item.average_rating),
+    isbn: item.isbn || "",
   };
 }
 
@@ -78,8 +83,7 @@ export async function createBookIfNeeded(
   bookItem: BookItem,
   feedContent: string
 ): Promise<void> {
-  const thisYear = new Date().getFullYear();
-  const thresholdDate = new Date(thisYear, 0, 1);
+  const thresholdDate = new Date(2024, 0, 1);
   if (
     bookItem.dateRead > thresholdDate &&
     (await prisma.book.findFirst({
@@ -92,16 +96,20 @@ export async function createBookIfNeeded(
       },
     })) === null
   ) {
+    const coverImage = await returnCoverImage(bookItem);
+
     await prisma.book.create({
       data: {
         title: bookItem.title,
         author: bookItem.author,
         goodReadsLink: bookItem.link,
-        coverImage: bookItem.coverImage,
+        coverImage: coverImage,
+        thumbnail: bookItem.thumbnail,
         rating: bookItem.rating,
         pages: bookItem.pages,
         dateRead: bookItem.dateRead,
         average_rating: bookItem.average_rating,
+        isbn: String(bookItem.isbn),
         listId: feedContent,
       },
     });
@@ -128,11 +136,13 @@ export async function addSearchedBook(
         title: bookItem.title,
         author: bookItem.author,
         goodReadsLink: bookItem.link,
+        thumbnail: bookItem.thumbnail,
         coverImage: bookItem.coverImage,
         rating: bookItem.rating,
         pages: bookItem.pages,
         dateRead: bookItem.dateRead,
         average_rating: bookItem.average_rating,
+        isbn: bookItem.isbn,
         listId: feedContent,
       },
     });

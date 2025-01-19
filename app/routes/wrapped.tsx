@@ -1,20 +1,12 @@
-import type { MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
-import { getSession, commitSession, destroySession } from "../sessions";
+import { getSession, commitSession } from "../sessions";
 import { prisma } from "~/db.server";
-import { List, Book } from "@prisma/client";
+import { Book } from "@prisma/client";
 import { wrapItUp } from "~/utils/wrapItUp";
-import CardItem from "~/components/cardItem"; // Updated import statement
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from "~/components/ui/carousel";
 import { motion } from "motion/react";
-import Intro from "~/components/introAnim";
 import IntroAnim from "~/components/introAnim";
+import BookItem from "~/components/BookItem";
+import { useEffect, useRef } from "react";
 
 // Define the type of data the loader returns
 interface LoaderData {
@@ -33,51 +25,83 @@ export async function loader({ request }: { request: Request }) {
     });
     const bookList = await prisma.book.findMany({ where: { listId: list.id } });
     const data = wrapItUp(bookList);
-    let subHeading = "";
-
-    switch (true) {
-      case data.numberOfBooks === 0:
-      subHeading = "No books found. Time to start reading!";
-      break;
-      case data.numberOfBooks === 1:
-      subHeading = "Only one book found. Keep going!";
-      break;
-      case data.numberOfBooks === 5:
-      subHeading = "Five books found. Great job!";
-      break;
-      case data.numberOfBooks >= 10 && data.numberOfBooks <= 20:
-      subHeading = "Between 10 and 20 books found. Impressive!";
-      break;
-      case data.numberOfBooks > 40:
-      subHeading = "More than 40 books found. You're a reading machine!";
-      break;
-      default:
-      subHeading = "Keep up the good work!";
-    }
 
     return Response.json(
-      { data: data, subHeading: subHeading },
+      { data: data, bookList: bookList },
       {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      },
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
       }
     );
-
   } catch (e) {}
 
   return Response.json({ error: "No Feed URL provided" });
 }
 
-
-
 // Main component
 export default function Index() {
-  const { data, subHeading } = useLoaderData() as any;
+  const { data, bookList } = useLoaderData() as any;
+  const constraintsRef = useRef(null);
+
+  useEffect(() => {
+    const grid = document.getElementById("dynamic-grid");
+    const bookContainers = Array.from(document.getElementsByClassName("book-item")) as HTMLElement[];
+    if (!grid) return;
+    function resizeGrid() {
+      const numItems = grid?.children.length || 0;
+      const gridHeight = grid?.clientHeight;
+      const gridWidth = grid?.clientWidth;
+
+      const defaultSize = 128*196;
+
+      const areaPerItem = (gridHeight * gridWidth) / numItems;
+      const scaler = Math.sqrt( areaPerItem / defaultSize);
+      const itemWidth = 128 * scaler;
+      const itemHeight = 196 * scaler;
+
+      bookContainers.forEach(element => {
+        element.style.width = `${itemWidth}px`;
+        element.style.height = `${itemHeight}px`;
+        
+      });
+
+    }
+
+    resizeGrid();
+    window.addEventListener("resize", resizeGrid);
+  }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen w-screen">
-      <IntroAnim subtitle={subHeading} />
+    <div className="items-center justify-center w-screen h-screen p-2">
+      <motion.div ref={constraintsRef} className="size-full">
+        <IntroAnim
+          booksCount={bookList.length}
+          pages={data.totalPages}
+          averageRating={data.averageRating}
+        />
+        <div id="dynamic-grid" className="flex flex-wrap p-4 gap-4 ">
+          {bookList.map((book: Book) => (
+            <motion.div
+              drag
+              dragConstraints={constraintsRef}
+              dragElastic={0.9}
+              whileDrag={{ scale: 0.9 }}
+              key={book.id}
+              initial={{ scaleY: 0, x: -100 }}
+              animate={{ scaleY: 1, x: 0 }}
+              transition={{
+                type: "spring",
+                bounce: 0.4,
+                delay: (bookList.indexOf(book) / bookList.length) * 5,
+              }}
+              className="book-item"
+            >
+              <BookItem imageUrl={book.coverImage} title={book.title} />
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 }

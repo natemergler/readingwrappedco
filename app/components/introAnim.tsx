@@ -1,27 +1,104 @@
-
+import { Link, Star } from "lucide-react";
 import { motion } from "motion/react";
+import NumberTicker from "./ui/basic-number-ticker";
 
 interface IntroProps {
-  subtitle?: string;
+  booksCount?: number;
+  pages?: number;
+  averageRating?: number;
 }
 
-export default function IntroAnim({ subtitle = "You read a lot" }: IntroProps) {
+export default function IntroAnim({
+  booksCount = 0,
+  pages = 0,
+  averageRating = 0,
+}: IntroProps) {
+  const stars = Array.from({ length: 5 }, (_, i) => i + 1);
+
   return (
-      <motion.div
-        animate={{ x: 300 }}
-        transition={{ type: "spring", bounce: 0.4 }}
-        className="text-4xl font-bold"
+    <motion.div
+      animate={{ x: 0 }}
+      transition={{ type: "spring", bounce: 0.4 }}
+      className="text-4xl font-bold text-right px-4"
+    >
+      <h2>readingwrapped.co</h2>
+      <motion.h4
+        initial={{ scaleY: 0 }}
+        animate={{ scaleY: 1 }}
+        transition={{ type: "spring", bounce: 0.4, delay: 0.5 }}
+        className="text-2xl font-normal"
       >
-        <h2>Reading Wrapped</h2>
-        <motion.h4
-          initial={{ scaleY: 0 }}
-          animate={{ scaleY: 1 }}
-          transition={{ type: "spring", bounce: 0.4, delay: 0.5 }}
-          className="text-2xl font-normal"
-        >
-          Your reading year in review
-        </motion.h4>
-        { subtitle }
-      </motion.div>
+        Your 2024 reading year in review
+      </motion.h4>
+      <motion.h3
+        initial={{ scaleY: 0 }}
+        animate={{ scaleY: 1 }}
+        transition={{ type: "spring", bounce: 0.4, delay: 1 }}
+        className="text-3xl font-normal my-3"
+      >
+        <NumberTicker
+          from={0}
+          target={booksCount}
+          transition={{
+            duration: 5,
+            type: "tween",
+            ease: "linear",
+          }}
+        ></NumberTicker>
+        &nbsp;Books Read
+      </motion.h3>
+      <motion.h3
+        initial={{ scaleY: 0 }}
+        animate={{ scaleY: 1 }}
+        transition={{ type: "spring", bounce: 0.4, delay: 1 }}
+        className="text-3xl font-normal my-3"
+      >
+        <NumberTicker
+          from={0}
+          target={pages}
+          transition={{
+            duration: 5,
+            type: "tween",
+            ease: "linear",
+          }}
+        ></NumberTicker>
+        &nbsp;Pages Read
+      </motion.h3>
+      <motion.h3
+        initial={{ scaleY: 0 }}
+        animate={{ scaleY: 1 }}
+        transition={{ type: "spring", bounce: 0.4, delay: 1.5 }}
+        className="text-3xl font-normal my-3 flex items-center justify-end gap-1"
+      >
+        Average Rating:&nbsp;
+        <div className="flex">
+          {stars.map((star, index) => (
+            <motion.div
+              key={index}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{
+                type: "spring",
+                bounce: 0.4,
+                delay: 1.5 + index * 0.1,
+              }}
+            >
+              <motion.div
+                transition={{ type: "spring" }}
+                whileHover={{ scale: 1.2, rotate: 360 }}
+              >
+                <Star
+                  className={`w-6 h-6 ${
+                    star <= averageRating
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "text-gray-300"
+                  }`}
+                />
+              </motion.div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.h3>
+    </motion.div>
   );
 }
