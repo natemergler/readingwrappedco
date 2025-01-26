@@ -47,15 +47,23 @@ export default function Index() {
   const { data, bookList } = useLoaderData() as any;
   const constraintsRef = useRef(null);
 
-  const handleBookClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  function handleBookClick(e: React.MouseEvent<HTMLDivElement>) {
     const target = e.currentTarget;
     // Reset z-index for all books
-    document.querySelectorAll('.book-item').forEach(item => {
-      (item as HTMLElement).style.zIndex = item.getAttribute('key') as string;
+    const bookItems = Array.from(document.querySelectorAll('.book-item') as NodeListOf<HTMLElement>)
+      .sort((a, b) => (parseInt(a.style.zIndex) || 0) - (parseInt(b.style.zIndex) || 0));
+    const targetIndex = bookItems.findIndex(item => item === target);
+    const reorderedItems = [
+      ...bookItems.slice(0, targetIndex),
+      ...bookItems.slice(targetIndex + 1),
+      target
+    ];
+
+    reorderedItems.forEach((item, index) => {
+      item.style.zIndex = (index + 1).toString();
     });
-    // Set clicked book to highest z-index
-    target.style.zIndex = '10';
-  };
+  }
+
 
   useEffect(() => {
     const grid = document.getElementById("dynamic-grid");
@@ -98,8 +106,8 @@ export default function Index() {
           pages={data.totalPages}
           averageRating={data.averageRating}
         />
-        <div id="dynamic-grid" className="flex flex-wrap p-4 gap-4 w-full h-[calc(100%-300px)]">
-          {bookList.map((book: Book) => (
+        <div id="dynamic-grid" className="flex flex-wrap gap-4 p-4 w-full h-[calc(100%-300px)]">
+            {bookList.map((book: Book, index: number) => (
             <motion.div
               drag
               dragConstraints={constraintsRef}
@@ -109,13 +117,13 @@ export default function Index() {
               initial={{ scaleY: 0, x: -100 }}
               animate={{ scaleY: 1, x: 0 }}
               transition={{
-                type: "spring",
-                bounce: 0.4,
-                delay: (bookList.indexOf(book) / bookList.length) * 5,
+              type: "spring",
+              bounce: 0.4,
+              delay: (bookList.indexOf(book) / bookList.length) * 5,
               }}
               className="book-item"
               onClick={handleBookClick}
-              style={{ zIndex: book.id + 1 }}
+              style={{ zIndex: index + 1 }}
             >
               <BookItem imageUrl={book.coverImage} title={book.title} />
             </motion.div>
