@@ -1,4 +1,4 @@
-import { useLoaderData } from "@remix-run/react";
+import { redirect, useLoaderData } from "@remix-run/react";
 import { getSession, commitSession } from "../sessions";
 import { prisma } from "~/db.server";
 import { Book } from "@prisma/client";
@@ -20,7 +20,7 @@ export async function loader({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
   const feedUrl = session.get("listId");
   try {
-    const list = await prisma.list.findUniqueOrThrow({
+    const list = await prisma.list.findFirst({
       where: { id: feedUrl as string },
     });
     const bookList = await prisma.book.findMany({ where: { listId: list.id } });
@@ -34,15 +34,28 @@ export async function loader({ request }: { request: Request }) {
         },
       }
     );
-  } catch (e) {}
-
-  return Response.json({ error: "No Feed URL provided" });
+  } catch (e) {
+    console.error("Error in wrapped loader:", e);
+    return redirect("/", {  // Redirect to home page instead of /error
+      status: 302
+    });
+  }
 }
 
 // Main component
 export default function Index() {
   const { data, bookList } = useLoaderData() as any;
   const constraintsRef = useRef(null);
+
+  const handleBookClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    // Reset z-index for all books
+    document.querySelectorAll('.book-item').forEach(item => {
+      (item as HTMLElement).style.zIndex = item.getAttribute('key') as string;
+    });
+    // Set clicked book to highest z-index
+    target.style.zIndex = '10';
+  };
 
   useEffect(() => {
     const grid = document.getElementById("dynamic-grid");
@@ -69,11 +82,13 @@ export default function Index() {
     }
 
     resizeGrid();
-    window.addEventListener("resize", resizeGrid);
+    return () => {
+      window.addEventListener("resize", resizeGrid);
+    };
   }, []);
 
   return (
-    <div className="items-center justify-center w-screen h-screen p-2">
+    <div className="items-center justify-center w-screen h-screen overflow-hidden">
       <motion.div ref={constraintsRef} className="size-full">
         <IntroAnim
           booksCount={bookList.length}
@@ -96,6 +111,8 @@ export default function Index() {
                 delay: (bookList.indexOf(book) / bookList.length) * 5,
               }}
               className="book-item"
+              onClick={handleBookClick}
+              style={{ zIndex: book.id + 1 }}
             >
               <BookItem imageUrl={book.coverImage} title={book.title} />
             </motion.div>
