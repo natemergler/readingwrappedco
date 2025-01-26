@@ -61,31 +61,34 @@ export default function Index() {
     const grid = document.getElementById("dynamic-grid");
     const bookContainers = Array.from(document.getElementsByClassName("book-item")) as HTMLElement[];
     if (!grid) return;
+    
     function resizeGrid() {
-      const numItems = grid?.children.length || 0;
+      const numItems = bookContainers.length || 0;
       const gridHeight = grid?.clientHeight;
       const gridWidth = grid?.clientWidth;
 
       const defaultSize = 128*196;
-
       const areaPerItem = (gridHeight * gridWidth) / numItems;
-      const scaler = Math.sqrt( areaPerItem / defaultSize);
+      console.log(areaPerItem);
+      const scaler = Math.sqrt(areaPerItem / defaultSize);
       const itemWidth = 128 * scaler;
       const itemHeight = 196 * scaler;
 
       bookContainers.forEach(element => {
         element.style.width = `${itemWidth}px`;
         element.style.height = `${itemHeight}px`;
-        
       });
-
     }
 
+    // Initial resize
     resizeGrid();
-    return () => {
-      window.addEventListener("resize", resizeGrid);
-    };
-  }, []);
+    
+    // Add resize listener
+    window.addEventListener("resize", resizeGrid);
+    
+    // Cleanup: remove listener when component unmounts
+    return () => window.removeEventListener("resize", resizeGrid);
+}, []);
 
   return (
     <div className="items-center justify-center w-screen h-screen overflow-hidden">
@@ -95,7 +98,7 @@ export default function Index() {
           pages={data.totalPages}
           averageRating={data.averageRating}
         />
-        <div id="dynamic-grid" className="flex flex-wrap p-4 gap-4 ">
+        <div id="dynamic-grid" className="flex flex-wrap p-4 gap-4 w-full h-[calc(100%-300px)]">
           {bookList.map((book: Book) => (
             <motion.div
               drag
