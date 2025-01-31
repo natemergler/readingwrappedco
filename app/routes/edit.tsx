@@ -33,8 +33,8 @@ interface SearchBooksData {
 
 export async function loader({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
-  const feedUrl = session.get("listId");
-  if (!feedUrl) {
+  const listId = session.get("listId");
+  if (!listId) {
     let randomId = nanoid(8);
     while (
       (await prisma.list.findUnique({ where: { id: randomId } })) != null

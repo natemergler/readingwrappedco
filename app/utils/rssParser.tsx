@@ -53,11 +53,12 @@ function parseXML(xmlString: string): any {
   return parser.parse(xmlString);
 }
 
-export async function createOrUpdateList(feedContent: string): Promise<void> {
+export async function createOrUpdateList(listId: string, feedContent?: string): Promise<void> {
   try {
     await prisma.list.create({
       data: {
-        id: feedContent,
+        id: listId,
+        goodreadsUrl: feedContent,
         date: new Date(),
       },
     });

@@ -1,23 +1,37 @@
 import { Form, useLoaderData, json, Link, redirect } from "@remix-run/react";
-import { parseRSS } from "~/utils/rssParser";
+import { createOrUpdateList, parseRSS } from "~/utils/rssParser";
 import { getSession, commitSession, destroySession } from "../sessions";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { useNavigation } from "@remix-run/react";
 import { Loader2 } from "lucide-react";
+import { nanoid } from "nanoid";
+import { prisma } from "~/db.server";
 
 export async function loader({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
   const url = new URL(request.url);
   const feedUrl = url.searchParams.get("feedUrl");
 
+  const sessionId = session.get("listId");
+  if (!sessionId) {
+    let randomId = nanoid(8);
+    while (
+      (await prisma.list.findUnique({ where: { id: randomId } })) != null
+    ) {
+      randomId = nanoid(14);
+    }
+    session.set("listId", randomId);
+    await createOrUpdateList(randomId, feedUrl ?? undefined);
+  }
+
   if (feedUrl == "") { return redirect("/edit"); }
   if (feedUrl && /goodreads\.com\/review\/list_rss\//.test(feedUrl)) {
     try {
       const cleanUrl = feedUrl.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '');
       await parseRSS(cleanUrl);
-      session.set("listId", cleanUrl);
+      await createOrUpdateList(String(session.get("listId")), cleanUrl ?? undefined);
       return redirect("/edit", {
         headers: {
           "Set-Cookie": await commitSession(session),
