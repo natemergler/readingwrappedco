@@ -11,11 +11,12 @@ datasource db {
 }
 
 model List {
-  id      String   @id
-  books   Book[]
-  date    DateTime
-  url     String?
-  wrapped Boolean  @default(false)
+  id          String   @id
+  books       Book[]
+  date        DateTime
+  url         String?
+  wrapped     Boolean  @default(false)
+  goodreadsUrl String?
 }
 
 model Book {

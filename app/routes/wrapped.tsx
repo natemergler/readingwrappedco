@@ -23,6 +23,9 @@ export async function loader({ request }: { request: Request }) {
     const list = await prisma.list.findFirst({
       where: { id: feedUrl as string },
     });
+    if (!list) {
+      return redirect("/");
+    }
     const bookList = await prisma.book.findMany({ where: { listId: list.id } });
     const data = wrapItUp(bookList);
 
@@ -72,8 +75,8 @@ export default function Index() {
     
     function resizeGrid() {
       const numItems = bookContainers.length || 0;
-      const gridHeight = grid?.clientHeight;
-      const gridWidth = grid?.clientWidth;
+      const gridHeight = grid?.clientHeight ?? 0;
+      const gridWidth = grid?.clientWidth ?? 0;
 
       const defaultSize = 128*196;
       const areaPerItem = (gridHeight * gridWidth) / numItems;
