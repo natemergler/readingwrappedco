@@ -16,13 +16,13 @@ export async function loader({ request }: { request: Request }) {
 
   const sessionId = session.get("listId");
   if (!sessionId) {
-    await initializeListId(session, feedUrl);
+    const sessionId = await initializeListId(session);
+    session.set("listId", sessionId);
   }
 
   if (feedUrl) {
     try {
-      const cleanedFeedUrl = await cleanFeedContent(feedUrl);
-      await parseRSS(String(sessionId),cleanedFeedUrl);
+      await parseRSS(String(sessionId),feedUrl);
       return redirect("/edit", {
         headers: {
           "Set-Cookie": await commitSession(session),

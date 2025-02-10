@@ -36,7 +36,7 @@ export async function loader({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
   const sessionId = session.get("listId");
   if (!sessionId) {
-    await initializeListId(session, null);
+    await initializeListId(session);
   }
   
   try {
@@ -117,7 +117,9 @@ export default function Edit() {
             }}
             className="flex justify-center items-center"
           >
-            <Link to="/wrapped"><Button variant={"magic"}>Wrap Up Your List</Button></Link>
+            <form action="/wrapped" method="post">
+              <Button variant={"magic"} type="submit">Wrap Up Your List</Button>
+            </form>
           </motion.div>
         )}
 

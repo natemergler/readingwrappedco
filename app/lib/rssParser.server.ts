@@ -69,6 +69,10 @@ function parseXML(xmlString: string): any {
 }
 
 export async function createOrUpdateList(listId: string, feedContent?: string): Promise<void> {
+  if (!listId) {
+    throw new Error('listId is required');
+  }
+
   try {
     await prisma.list.upsert({
       where: {
@@ -84,7 +88,10 @@ export async function createOrUpdateList(listId: string, feedContent?: string): 
         date: new Date(),
       },
     });
-  } catch (e) {}
+  } catch (e) {
+    console.error('Error creating/updating list:', e);
+    throw new Error('Failed to create or update list');
+  }
 }
 
 function extractGoodReadsBook(item: any): BookItem {
