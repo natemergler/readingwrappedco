@@ -20,6 +20,7 @@ import { nanoid } from "nanoid";
 import { BookForm } from "~/components/BookForm";
 import { motion } from "motion/react";
 import { Loader2 } from "lucide-react";
+import { initializeListId } from "~/lib/utils";
 
 // Define the type of data the loader returns
 interface LoaderData {
@@ -33,17 +34,11 @@ interface SearchBooksData {
 
 export async function loader({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
-  const listId = session.get("listId");
-  if (!listId) {
-    let randomId = nanoid(8);
-    while (
-      (await prisma.list.findUnique({ where: { id: randomId } })) != null
-    ) {
-      randomId = nanoid(14);
-    }
-    session.set("listId", randomId);
-    await createOrUpdateList(randomId);
+  const sessionId = session.get("listId");
+  if (!sessionId) {
+    await initializeListId(session, null);
   }
+  
   try {
     const feedUrl = String(session.get("listId"));
 

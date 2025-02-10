@@ -6,8 +6,8 @@ import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { useNavigation } from "@remix-run/react";
 import { Loader2 } from "lucide-react";
-import { nanoid } from "nanoid";
-import { prisma } from "~/db.server";
+import { Session } from "@remix-run/node";
+import { initializeListId } from "~/lib/utils";
 
 export async function loader({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -16,14 +16,7 @@ export async function loader({ request }: { request: Request }) {
 
   const sessionId = session.get("listId");
   if (!sessionId) {
-    let randomId = nanoid(8);
-    while (
-      (await prisma.list.findUnique({ where: { id: randomId } })) != null
-    ) {
-      randomId = nanoid(14);
-    }
-    session.set("listId", randomId);
-    await createOrUpdateList(randomId, feedUrl ?? undefined);
+    await initializeListId(session, feedUrl);
   }
 
   if (feedUrl == "") { return redirect("/edit"); }
@@ -45,6 +38,7 @@ export async function loader({ request }: { request: Request }) {
   }
   return Response.json({ ok: true });
 }
+
 
 
 // Main component
@@ -81,3 +75,5 @@ export default function Index() {
     </div>
   );
 }
+
+
