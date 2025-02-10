@@ -45,11 +45,11 @@ export default function Index() {
   const navigation = useNavigation();
 
   return (
-    <div className="flex justify-center items-center h-screen">
+    <div className="flex justify-center items-center h-screen flex-col">
       <div className="grid gap-5">
         <Label htmlFor="feedUrl">Reading Wrapped</Label>
         <p className="text-center">
-          Enter <a href="https://www.goodreads.com/review/list" target="_blank">your Goodreads URL</a> to generate a reading wrap-up. <br />
+          Enter <a href="https://www.goodreads.com/review/list" target="_blank" className="text-destructive underline">your Goodreads URL</a> to generate a reading wrap-up. <br />
            or alternatively, click edit to make a list.
           </p>
         <Form action="/" method="get" className="gap-2 flex flex-col">
@@ -70,6 +70,7 @@ export default function Index() {
         </Form>
         {!ok && <div><p className="text-red-500">Please enter a valid book list</p></div>}
       </div>
+      <div className="fixed bottom-0 left-0 h-10 w-full p-2"><p className="text-center">made with love &lt;3</p></div>
     </div>
   );
 }
