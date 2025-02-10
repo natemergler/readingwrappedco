@@ -3,7 +3,7 @@ import { clsx, type ClassValue } from "clsx"
 import { nanoid } from "nanoid";
 import { twMerge } from "tailwind-merge"
 import { prisma } from "~/db.server";
-import { createOrUpdateList } from "~/utils/rssParser";
+import { createOrUpdateList } from "~/lib/rssParser";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

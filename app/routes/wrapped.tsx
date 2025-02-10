@@ -2,7 +2,7 @@ import { redirect, useLoaderData } from "@remix-run/react";
 import { getSession, commitSession } from "../sessions";
 import { prisma } from "~/db.server";
 import { Book } from "@prisma/client";
-import { wrapItUp } from "~/utils/wrapItUp";
+import { wrapItUp } from "~/lib/wrapItUp";
 import { motion } from "motion/react";
 import IntroAnim from "~/components/introAnim";
 import BookItem from "~/components/BookItem";

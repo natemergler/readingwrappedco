@@ -13,8 +13,8 @@ import {
 } from "../components/ui/table";
 import { ActionFunctionArgs } from "@remix-run/node";
 import { Input } from "~/components/ui/input";
-import { parseGoogleBooksResponse, searchBooks } from "~/utils/googlebooks";
-import { addSearchedBook, createOrUpdateList } from "~/utils/rssParser";
+import { parseGoogleBooksResponse, searchBooks } from "~/lib/googlebooks";
+import { addSearchedBook, createOrUpdateList } from "~/lib/rssParser";
 import { commitSession, getSession } from "~/sessions";
 import { nanoid } from "nanoid";
 import { BookForm } from "~/components/BookForm";

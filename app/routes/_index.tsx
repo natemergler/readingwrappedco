@@ -1,5 +1,5 @@
 import { Form, useLoaderData, json, Link, redirect } from "@remix-run/react";
-import { createOrUpdateList, parseRSS } from "~/utils/rssParser";
+import { createOrUpdateList, parseRSS } from "~/lib/rssParser";
 import { getSession, commitSession, destroySession } from "../sessions";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
