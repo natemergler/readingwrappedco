@@ -1,25 +1,33 @@
-import { Book } from "@prisma/client";
+import { Book, Wrapper, List } from "@prisma/client";
+import { prisma } from "~/db.server";
 
-export function wrapItUp(bookList: Book[]) {
+export async function wrapItUp(bookList: Book[], listId: string) {
   const numberOfBooks = bookList.length;
   const totalPages = bookList.reduce((total, book) => total + book.pages, 0);
-
-  const lowestRatedBook = bookList
-  .filter(book => book.rating > 0)
-  .reduce((min, book) => book.rating < min.rating ? book : min, bookList[0]);
-  const highestRatedBook = bookList
-  .filter(book => book.rating > 0)
-  .reduce((max, book) => book.rating > max.rating ? book : max, bookList[0]);
   const averageRating = bookList.reduce((total, book) => total + book.rating, 0) / numberOfBooks;
-  const totalStars = bookList.reduce((total, book) => total + book.rating, 0);
+
+  await composeWrapper(bookList, listId);
 
   return {
     numberOfBooks,
     totalPages,
-    lowestRatedBook,
-    highestRatedBook,
     averageRating,
-    totalStars
   };
+}
+
+async function composeWrapper(bookList: Book[], listId: string) {
+  const wrapper: Wrapper = {
+    id: listId,
+    numberOfBooks: bookList.length,
+    totalPages: bookList.reduce((total, book) => total + book.pages, 0),
+    averageRating: bookList.reduce((total, book) => total + book.rating, 0) / bookList.length,
+    url: "/"+listId,
+    date: new Date(),
+    wrapped: true
+  };
+
+  await prisma.wrapper.create({
+    data: wrapper,
+  });
 }
 

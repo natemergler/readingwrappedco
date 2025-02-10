@@ -18,16 +18,16 @@ interface LoaderData {
 
 export async function loader({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
-  const listId = session.get("listId");
   try {
+    const listId = session.get("listId")?.toString();
     const list = await prisma.list.findFirst({
-      where: { id: listId as string },
+      where: { id: listId },
     });
-    if (!list) {
+    if (!listId || !list) {
       return redirect("/");
     }
     const bookList = await prisma.book.findMany({ where: { listId: list.id } });
-    const data = wrapItUp(bookList);
+    const data = wrapItUp(bookList, listId);
 
     return Response.json(
       { data: data, bookList: bookList },
