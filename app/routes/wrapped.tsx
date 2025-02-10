@@ -18,10 +18,10 @@ interface LoaderData {
 
 export async function loader({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
-  const feedUrl = session.get("listId");
+  const listId = session.get("listId");
   try {
     const list = await prisma.list.findFirst({
-      where: { id: feedUrl as string },
+      where: { id: listId as string },
     });
     if (!list) {
       return redirect("/");
