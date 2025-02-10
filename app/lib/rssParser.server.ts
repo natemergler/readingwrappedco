@@ -1,7 +1,7 @@
 // Define the structure of a parsed book item
 import { XMLParser } from "fast-xml-parser";
 import { prisma } from "~/db.server";
-import { addCoverImage, returnCoverImage } from "./googlebooks";
+import { addCoverImage, returnCoverImage } from "./googlebooks.server";
 
 export interface BookItem {
   title: string;
@@ -16,23 +16,26 @@ export interface BookItem {
   isbn: string;
 }
 
-export async function parseRSS(feedContent: string): Promise<BookItem[]> {
-  // Parse the RSS feed content
+export async function parseRSS(listId: string, feedContent: string): Promise<BookItem[]> {
   const cleanedFeedContent = cleanFeedContent(feedContent);
   const xmlFeed = await fetchRssFeed(`https://www.${cleanedFeedContent}`);
   const feed = parseXML(xmlFeed);
 
-  // Create or update the list
-  await createOrUpdateList(cleanedFeedContent);
-  // Extract the fields you need from each item
-  const books = feed.rss.channel.item.map(async (item: any) => {
-    if (item.user_read_at !== "") {
-      const bookItem = extractGoodReadsBook(item);
-      await createBookIfNeeded(bookItem, cleanedFeedContent);
-      return bookItem;
-    }
-  });
-  return books;
+  // Wait for list creation to complete
+  await createOrUpdateList(listId, cleanedFeedContent);
+
+  // Use Promise.all to wait for all book creations
+  const books = await Promise.all(
+    feed.rss.channel.item
+      .filter((item: any) => item.user_read_at !== "")
+      .map(async (item: any) => {
+        const bookItem = extractGoodReadsBook(item);
+        await createBookIfNeeded(bookItem, listId); // Pass listId instead of cleanedFeedContent
+        return bookItem;
+      })
+  );
+
+  return books.filter((book): book is BookItem => book !== undefined);
 }
 
 function cleanFeedContent(feedContent: string): string {
@@ -55,9 +58,16 @@ function parseXML(xmlString: string): any {
 
 export async function createOrUpdateList(listId: string, feedContent?: string): Promise<void> {
   try {
-    await prisma.list.create({
-      data: {
+    await prisma.list.upsert({
+      where: {
         id: listId,
+      },
+      create: {
+        id: listId,
+        goodreadsUrl: feedContent,
+        date: new Date(),
+      },
+      update: {
         goodreadsUrl: feedContent,
         date: new Date(),
       },

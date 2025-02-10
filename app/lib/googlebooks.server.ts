@@ -1,6 +1,6 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
-import { BookItem } from './rssParser';
+import { BookItem } from './rssParser.server';
 import { i } from 'node_modules/vite/dist/node/types.d-aGj9QkWt';
 
 dotenv.config();
