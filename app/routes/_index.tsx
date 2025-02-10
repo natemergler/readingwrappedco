@@ -1,13 +1,13 @@
 import { Form, useLoaderData, json, Link, redirect } from "@remix-run/react";
-import { createOrUpdateList, parseRSS } from "~/lib/rssParser.server";
+import { parseRSS } from "~/lib/rssParser.server";
 import { getSession, commitSession, destroySession } from "../sessions";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { useNavigation } from "@remix-run/react";
 import { Loader2 } from "lucide-react";
-import { Session } from "@remix-run/node";
 import { initializeListId } from "~/lib/stuff.server";
+import { cleanFeedContent } from "~/lib/rssParser.server";
 
 export async function loader({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -19,12 +19,10 @@ export async function loader({ request }: { request: Request }) {
     await initializeListId(session, feedUrl);
   }
 
-  if (feedUrl == "") { return redirect("/edit"); }
-  if (feedUrl && /goodreads\.com\/review\/list_rss\//.test(feedUrl)) {
+  if (feedUrl) {
     try {
-      const cleanUrl = feedUrl.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '');
-
-      await parseRSS(String(sessionId),cleanUrl);
+      const cleanedFeedUrl = await cleanFeedContent(feedUrl);
+      await parseRSS(String(sessionId),cleanedFeedUrl);
       return redirect("/edit", {
         headers: {
           "Set-Cookie": await commitSession(session),
@@ -51,7 +49,7 @@ export default function Index() {
       <div className="grid gap-5">
         <Label htmlFor="feedUrl">Reading Wrapped</Label>
         <p className="text-center">
-          Enter your Goodreads URL to generate a reading wrap-up. <br />
+          Enter <a href="https://www.goodreads.com/review/list" target="_blank">your Goodreads URL</a> to generate a reading wrap-up. <br />
            or alternatively, click edit to make a list.
           </p>
         <Form action="/" method="get" className="gap-2 flex flex-col">

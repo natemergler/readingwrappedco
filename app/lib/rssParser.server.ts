@@ -17,7 +17,7 @@ export interface BookItem {
 }
 
 export async function parseRSS(listId: string, feedContent: string): Promise<BookItem[]> {
-  const cleanedFeedContent = cleanFeedContent(feedContent);
+  const cleanedFeedContent = await cleanFeedContent(feedContent);
   const xmlFeed = await fetchRssFeed(`https://www.${cleanedFeedContent}`);
   const feed = parseXML(xmlFeed);
 
@@ -38,11 +38,23 @@ export async function parseRSS(listId: string, feedContent: string): Promise<Boo
   return books.filter((book): book is BookItem => book !== undefined);
 }
 
-function cleanFeedContent(feedContent: string): string {
-  if (!feedContent.startsWith("goodreads.com/review/list_rss/")) {
-    throw new Error();
+export async function cleanFeedContent(feedContent: string): Promise<string> {
+  // Regular expression to match either list_rss or list followed by numbers
+  const regex = /^(?:https?:\/\/)?(?:www\.)?goodreads\.com\/review\/(list_rss|list)\/(\d+)/;
+  const match = feedContent.match(regex);
+
+  if (!match) {
+    throw new Error("Invalid Goodreads URL format");
   }
-  return feedContent;
+
+  const [, type, numbers] = match;
+  
+  // If type is 'list', convert to 'list_rss'
+  const correctType = type === 'list' ? 'list_rss' : type;
+  
+  // Ensure URL ends with ?shelf=read
+  const baseUrl = `goodreads.com/review/${correctType}/${numbers}`;
+  return baseUrl + (feedContent.includes('?shelf=read') ? '' : '?shelf=read') + (feedContent.includes('&sort=date_read&order=d'));
 }
 
 async function fetchRssFeed(url: string): Promise<string> {
