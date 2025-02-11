@@ -13,11 +13,9 @@ export async function loader({ params }: LoaderFunctionArgs) {
     orderBy: { dateRead: "asc" },
   });
 
-  console.log(books.length);
   const wrapped = await prisma.wrapper.findFirst({
     where: { id: params.listId },
   });
-  console.log(wrapped?.numberOfBooks);
   return Response.json({ data: wrapped, bookList: books });
 }
 
@@ -61,7 +59,6 @@ export default function Index() {
 
       const defaultSize = 128 * 196;
       const areaPerItem = (gridHeight * gridWidth) / numItems;
-      console.log(areaPerItem);
       const scaler = Math.sqrt(areaPerItem / defaultSize);
       const itemWidth = 128 * scaler;
       const itemHeight = 196 * scaler;
@@ -89,6 +86,7 @@ export default function Index() {
           booksCount={bookList.length}
           pages={data.totalPages}
           averageRating={data.averageRating}
+          url={"/wrapped"+data.url}
         />
         <div
           id="dynamic-grid"

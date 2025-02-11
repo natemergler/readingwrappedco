@@ -108,7 +108,6 @@ export async function createOrUpdateList(
       });
     } else {
       // Create new list
-      console.log("Creating new list:", listId);
       await prisma.list.create({
         data: {
           id: listId,

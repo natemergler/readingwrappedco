@@ -1,17 +1,20 @@
-import { Link, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { motion } from "motion/react";
 import NumberTicker from "./ui/basic-number-ticker";
+import { Link } from "@remix-run/react"
 
 interface IntroProps {
   booksCount?: number;
   pages?: number;
   averageRating?: number;
+  url?: string;
 }
 
 export default function IntroAnim({
   booksCount = 0,
   pages = 0,
   averageRating = 0,
+  url = "",
 }: IntroProps) {
   const stars = Array.from({ length: 5 }, (_, i) => i + 1);
 
@@ -19,9 +22,9 @@ export default function IntroAnim({
     <motion.div
       animate={{ x: 0 }}
       transition={{ type: "spring", bounce: 0.4 }}
-      className="text-4xl font-bold text-right px-4"
+      className="text-4xl font-bold text-right p-4"
     >
-      <h2>readingwrapped.co</h2>
+      <h2><Link to={"readingwrapped.co"+{url}}>readingwrapped.co{url}</Link></h2>
       <motion.h4
         initial={{ scaleY: 0 }}
         animate={{ scaleY: 1 }}
