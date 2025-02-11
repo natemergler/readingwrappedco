@@ -16,7 +16,10 @@ export interface BookItem {
   isbn: string;
 }
 
-export async function parseRSS(listId: string, feedContent: string): Promise<BookItem[]> {
+export async function parseRSS(
+  listId: string,
+  feedContent: string
+): Promise<BookItem[]> {
   const cleanedFeedContent = await cleanFeedContent(feedContent);
   const xmlFeed = await fetchRssFeed(`https://www.${cleanedFeedContent}`);
   const feed = parseXML(xmlFeed);
@@ -40,7 +43,7 @@ export async function parseRSS(listId: string, feedContent: string): Promise<Boo
 
 export async function cleanFeedContent(feedContent: string): Promise<string> {
   // Regular expression to match either list_rss or list followed by numbers
-  const regex = /^(?:https?:\/\/)?(?:www\.)?goodreads\.com\/review\/(list_rss|list)\/(\d+)/;
+  const regex = /goodreads\.com\/review\/(list_rss|list)\/(\d+)/;
   const match = feedContent.match(regex);
 
   if (!match) {
@@ -48,19 +51,27 @@ export async function cleanFeedContent(feedContent: string): Promise<string> {
   }
 
   const [, type, numbers] = match;
-  
+
   // If type is 'list', convert to 'list_rss'
-  const correctType = type === 'list' ? 'list_rss' : type;
-  
-  // Ensure URL ends with ?shelf=read
-  const baseUrl = `goodreads.com/review/${correctType}/${numbers}`;
-  return baseUrl + (feedContent.includes('?shelf=read') ? '' : '?shelf=read') + (feedContent.includes('&sort=date_read&order=d'));
+  const correctType = type === "list" ? "list_rss" : type;
+
+  // Ensure URL ends with ?shelf=read and sort parameters
+  const baseUrl = `goodreads.com/review/${correctType}/${numbers}?shelf=read&sort=date_read&order=d`;
+  return (
+    baseUrl
+  );
 }
 
 async function fetchRssFeed(url: string): Promise<string> {
-  const response = await fetch(url);
-  const xmlString = await response.text();
-  return xmlString; // This is the XML content as a string
+  try {
+    const response = await fetch(url);
+    const xmlString = await response.text();
+    return xmlString; // This is the XML content as a string
+  } catch (e) {
+    throw new Error();
+    return "";
+
+  }
 }
 
 function parseXML(xmlString: string): any {
@@ -68,29 +79,48 @@ function parseXML(xmlString: string): any {
   return parser.parse(xmlString);
 }
 
-export async function createOrUpdateList(listId: string, feedContent?: string): Promise<void> {
+export async function createOrUpdateList(
+  listId: string,
+  feedContent?: string
+): Promise<void> {
   if (!listId) {
-    throw new Error('listId is required');
+    throw new Error("listId is required");
   }
 
   try {
-    await prisma.list.upsert({
-      where: {
-        id: listId,
-      },
-      create: {
-        id: listId,
-        goodreadsUrl: feedContent,
-        date: new Date(),
-      },
-      update: {
-        goodreadsUrl: feedContent,
-        date: new Date(),
-      },
+    const now = new Date();
+
+    // First check if list exists
+    const existingList = await prisma.list.findUnique({
+      where: { id: listId },
     });
+
+    if (existingList) {
+      // Update existing list
+      await prisma.list.update({
+        where: { id: listId },
+        data: {
+          goodreadsUrl: feedContent,
+          date: now,
+          // Only update wrapped status if it's not already true
+          wrapped: existingList.wrapped || false,
+        },
+      });
+    } else {
+      // Create new list
+      console.log("Creating new list:", listId);
+      await prisma.list.create({
+        data: {
+          id: listId,
+          goodreadsUrl: feedContent,
+          date: now,
+          wrapped: false,
+        },
+      });
+    }
   } catch (e) {
-    console.error('Error creating/updating list:', e);
-    throw new Error('Failed to create or update list');
+    console.error("Error in createOrUpdateList:", e);
+    throw new Error("Failed to create or update list");
   }
 }
 
