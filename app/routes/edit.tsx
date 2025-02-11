@@ -16,7 +16,6 @@ import { Input } from "~/components/ui/input";
 import { parseGoogleBooksResponse, searchBooks } from "~/lib/googlebooks.server";
 import { addSearchedBook, createOrUpdateList } from "~/lib/rssParser.server";
 import { commitSession, getSession } from "~/sessions";
-import { nanoid } from "nanoid";
 import { BookForm } from "~/components/BookForm";
 import { motion } from "motion/react";
 import { Loader2 } from "lucide-react";

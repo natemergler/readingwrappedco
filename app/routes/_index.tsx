@@ -1,13 +1,10 @@
-import { Form, useLoaderData, json, Link, redirect } from "@remix-run/react";
+import { Form, useLoaderData, redirect } from "@remix-run/react";
 import { parseRSS } from "~/lib/rssParser.server";
-import { getSession, commitSession, destroySession } from "../sessions";
+import { getSession, commitSession, } from "../sessions";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
-import { useNavigation } from "@remix-run/react";
-import { Loader2 } from "lucide-react";
 import { initializeListId } from "~/lib/stuff.server";
-import { cleanFeedContent } from "~/lib/rssParser.server";
 
 export async function action({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));

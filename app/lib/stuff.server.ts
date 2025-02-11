@@ -1,7 +1,6 @@
 import { Session } from "@remix-run/node";
 import { nanoid } from "nanoid";
 import { prisma } from "~/db.server";
-import { createOrUpdateList } from "./rssParser.server";
 
 export async function initializeListId(session: Session) {
     let randomId = nanoid(8);

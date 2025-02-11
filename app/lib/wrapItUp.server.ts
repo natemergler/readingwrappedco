@@ -32,6 +32,7 @@ async function composeWrapper(
         },
       },
     });
+    await prisma.list.update({where: {id: listId}, data: {wrapped: true}});
   } catch (e) {
     console.error("Error in composeWrapper:", e);
     return "/";

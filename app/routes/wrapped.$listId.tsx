@@ -6,7 +6,6 @@ import { useRef, useEffect } from "react";
 import BookItem from "~/components/BookItem";
 import IntroAnim from "~/components/introAnim";
 import { prisma } from "~/db.server";
-import { destroySession, getSession } from "~/sessions";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const books = await prisma.book.findMany({

@@ -1,5 +1,5 @@
-import { redirect, useLoaderData } from "@remix-run/react";
-import { getSession, commitSession, destroySession } from "../sessions";
+import { redirect } from "@remix-run/react";
+import { getSession, destroySession } from "../sessions";
 import { prisma } from "~/db.server";
 import { wrapItUp } from "~/lib/wrapItUp.server";
 
@@ -12,7 +12,6 @@ export async function action({ request }: { request: Request }) {
     }
     const bookList = await prisma.book.findMany({ where: { listId: listId } });
     const data = await wrapItUp(bookList, listId);
-    await prisma.list.update({where: {id: listId}, data: {wrapped: true}});
     return redirect(data, {
       headers: { "Set-Cookie": await destroySession(session) },
     });

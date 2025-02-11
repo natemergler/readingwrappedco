@@ -1,7 +1,7 @@
 // Define the structure of a parsed book item
 import { XMLParser } from "fast-xml-parser";
 import { prisma } from "~/db.server";
-import { addCoverImage, returnCoverImage } from "./googlebooks.server";
+import {  returnCoverImage } from "./googlebooks.server";
 
 export interface BookItem {
   title: string;
