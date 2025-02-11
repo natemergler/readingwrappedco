@@ -35,6 +35,7 @@ interface SearchBooksData {
 export async function loader({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
   const sessionId = session.get("listId");
+  const date = session.get("date")
   if (!sessionId) {
     await initializeListId(session);
   }

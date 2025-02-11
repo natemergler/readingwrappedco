@@ -9,31 +9,43 @@ import { Loader2 } from "lucide-react";
 import { initializeListId } from "~/lib/stuff.server";
 import { cleanFeedContent } from "~/lib/rssParser.server";
 
-export async function loader({ request }: { request: Request }) {
+export async function action({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
-  const url = new URL(request.url);
-  const feedUrl = url.searchParams.get("feedUrl");
-
+  const formData = await request.formData();
+  const feedUrl = formData.get("feedUrl")?.toString().replace(/^(?:https?:\/\/)?(?:www\.)?/i, '');
   const sessionId = session.get("listId");
-  if (!sessionId) {
-    const sessionId = await initializeListId(session);
-    session.set("listId", sessionId);
-  }
 
   if (feedUrl) {
     try {
-      await parseRSS(String(sessionId),feedUrl);
+      await parseRSS(String(sessionId), feedUrl);
+      session.flash("date", new Date());
       return redirect("/edit", {
         headers: {
           "Set-Cookie": await commitSession(session),
         },
       });
     } catch (error) {
-      return Response.json({
-        ok: false,
-      });
+      return Response.json({ ok: false });
     }
   }
+  return Response.json({ ok: false });
+}
+
+export async function loader({ request }: { request: Request }) {
+  const session = await getSession(request.headers.get("Cookie"));
+  const sessionTime = session.get("date");
+
+  if (!sessionTime) {
+    const newSessionId = await initializeListId(session);
+    session.set("listId", newSessionId);
+
+    return Response.json({ ok: true }, {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  }
+
   return Response.json({ ok: true });
 }
 
@@ -42,7 +54,6 @@ export async function loader({ request }: { request: Request }) {
 // Main component
 export default function Index() {
   const { ok } = useLoaderData<typeof loader>();
-  const navigation = useNavigation();
 
   return (
     <div className="flex justify-center items-center h-screen flex-col">
@@ -52,21 +63,14 @@ export default function Index() {
           Enter <a href="https://www.goodreads.com/review/list" target="_blank" className="text-destructive underline">your Goodreads URL</a> to generate a reading wrap-up. <br />
            or alternatively, click edit to make a list.
           </p>
-        <Form action="/" method="get" className="gap-2 flex flex-col">
+        <Form method="post" className="gap-2 flex flex-col">
           <Input
             className="w-auto"
             name="feedUrl"
             type="text"
             placeholder="Goodread's RSS URL"
           />
-          {navigation.state === "loading" ? (
-            <Button disabled>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Please wait
-            </Button>
-          ) : (
-            <Button>Edit</Button>
-          )}
+            <Button type="submit">Edit</Button>
         </Form>
         {!ok && <div><p className="text-red-500">Please enter a valid book list</p></div>}
       </div>
