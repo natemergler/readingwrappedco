@@ -8,6 +8,5 @@ export async function initializeListId(session: Session) {
     while ((await prisma.list.findUnique({ where: { id: randomId } })) != null) {
       randomId = nanoid(14);
     }
-    await createOrUpdateList(randomId);
     return randomId;
   }
