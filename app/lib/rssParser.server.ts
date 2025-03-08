@@ -2,6 +2,7 @@
 import { XMLParser } from "fast-xml-parser";
 import { prisma } from "~/db.server";
 import {  getBookInfo, searchBooks } from "./googlebooks.server";
+import { checkImageHash } from "./stuff.server";
 
 export interface BookItem {
   title: string;
@@ -157,7 +158,8 @@ export async function createBookIfNeeded(
   ) {
     const getGoogleId = await searchBooks(bookItem.title, bookItem.author);
     const googleId = getGoogleId[0].id;
-    const coverImage = `https://books.google.com/books/content?id=${googleId}&printsec=frontcover&img=1&zoom=0&edge=curl&source=gbs_api`
+    const coverImage = await checkImageHash(`https://books.google.com/books/content?id=${googleId}&printsec=frontcover&img=1&zoom=0&edge=curl&source=gbs_api`)
+
     await prisma.book.create({
       data: {
         title: bookItem.title,
@@ -195,7 +197,7 @@ export async function addSearchedBook(
   ) {
     const getGoogleId = await searchBooks(bookItem.title, bookItem.author);
     const googleId = getGoogleId[0].id;
-    const coverImage = `https://books.google.com/books/content?id=${googleId}&printsec=frontcover&img=1&zoom=0&edge=curl&source=gbs_api`
+    const coverImage = await checkImageHash(`https://books.google.com/books/content?id=${googleId}&printsec=frontcover&img=1&zoom=0&edge=curl&source=gbs_api`)
 
     await prisma.book.create({
       data: {
