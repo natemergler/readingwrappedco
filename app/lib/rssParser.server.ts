@@ -1,7 +1,7 @@
 // Define the structure of a parsed book item
 import { XMLParser } from "fast-xml-parser";
 import { prisma } from "~/db.server";
-import {  returnCoverImage } from "./googlebooks.server";
+import {  getBookInfo, searchBooks } from "./googlebooks.server";
 
 export interface BookItem {
   title: string;
@@ -155,8 +155,9 @@ export async function createBookIfNeeded(
       },
     })) === null
   ) {
-    const coverImage = await returnCoverImage(bookItem);
-
+    const getGoogleId = await searchBooks(bookItem.title, bookItem.author);
+    const googleId = getGoogleId[0].id;
+    const coverImage = `https://books.google.com/books/content?id=${googleId}&printsec=frontcover&img=1&zoom=0&edge=curl&source=gbs_api`
     await prisma.book.create({
       data: {
         title: bookItem.title,
@@ -179,6 +180,8 @@ export async function addSearchedBook(
   bookItem: BookItem,
   feedContent: string
 ): Promise<void> {
+  await createOrUpdateList(feedContent);
+
   if (
     (await prisma.book.findFirst({
       where: {
@@ -190,13 +193,17 @@ export async function addSearchedBook(
       },
     })) === null
   ) {
+    const getGoogleId = await searchBooks(bookItem.title, bookItem.author);
+    const googleId = getGoogleId[0].id;
+    const coverImage = `https://books.google.com/books/content?id=${googleId}&printsec=frontcover&img=1&zoom=0&edge=curl&source=gbs_api`
+
     await prisma.book.create({
       data: {
         title: bookItem.title,
         author: bookItem.author,
         goodReadsLink: bookItem.link,
         thumbnail: bookItem.thumbnail,
-        coverImage: bookItem.coverImage,
+        coverImage: coverImage,
         rating: bookItem.rating,
         pages: bookItem.pages,
         dateRead: bookItem.dateRead,

@@ -1,6 +1,6 @@
 import { Form, useLoaderData, redirect } from "@remix-run/react";
 import { parseRSS } from "~/lib/rssParser.server";
-import { getSession, commitSession, } from "../sessions";
+import { getSession, commitSession } from "../sessions";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
@@ -9,7 +9,10 @@ import { initializeListId } from "~/lib/stuff.server";
 export async function action({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
   const formData = await request.formData();
-  const feedUrl = formData.get("feedUrl")?.toString().replace(/^(?:https?:\/\/)?(?:www\.)?/i, '');
+  const feedUrl = formData
+    .get("feedUrl")
+    ?.toString()
+    .replace(/^(?:https?:\/\/)?(?:www\.)?/i, "");
   const sessionId = session.get("listId");
 
   if (feedUrl) {
@@ -25,7 +28,11 @@ export async function action({ request }: { request: Request }) {
       return Response.json({ ok: false });
     }
   }
-  return Response.json({ ok: false });
+  return redirect("/edit", {
+    headers: {
+      "Set-Cookie": await commitSession(session),
+    },
+  });
 }
 
 export async function loader({ request }: { request: Request }) {
@@ -36,17 +43,18 @@ export async function loader({ request }: { request: Request }) {
     const newSessionId = await initializeListId(session);
     session.set("listId", newSessionId);
 
-    return Response.json({ ok: true }, {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      },
-    });
+    return Response.json(
+      { ok: true },
+      {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      }
+    );
   }
 
   return Response.json({ ok: true });
 }
-
-
 
 // Main component
 export default function Index() {
@@ -57,9 +65,17 @@ export default function Index() {
       <div className="grid gap-5">
         <Label htmlFor="feedUrl">Reading Wrapped</Label>
         <p className="text-center">
-          Enter <a href="https://www.goodreads.com/review/list" target="_blank" className="text-destructive underline">your Goodreads URL</a> to generate a reading wrap-up. <br />
-           or alternatively, click edit to make a list.
-          </p>
+          Enter{" "}
+          <a
+            href="https://www.goodreads.com/review/list"
+            target="_blank"
+            className="text-destructive underline"
+          >
+            your Goodreads URL
+          </a>{" "}
+          to generate a reading wrap-up. <br />
+          or alternatively, click edit to make a list.
+        </p>
         <Form method="post" className="gap-2 flex flex-col">
           <Input
             className="w-auto"
@@ -67,13 +83,17 @@ export default function Index() {
             type="text"
             placeholder="Goodread's RSS URL"
           />
-            <Button type="submit">Edit</Button>
+          <Button type="submit">Edit</Button>
         </Form>
-        {!ok && <div><p className="text-red-500">Please enter a valid book list</p></div>}
+        {!ok && (
+          <div>
+            <p className="text-red-500">Please enter a valid book list</p>
+          </div>
+        )}
       </div>
-      <div className="fixed bottom-0 left-0 h-10 w-full p-2"><p className="text-center">made with love &lt;3</p></div>
+      <div className="fixed bottom-0 left-0 h-10 w-full p-2">
+        <p className="text-center">made with love &lt;3</p>
+      </div>
     </div>
   );
 }
-
-

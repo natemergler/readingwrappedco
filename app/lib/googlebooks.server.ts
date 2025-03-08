@@ -8,6 +8,11 @@ dotenv.config();
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 export async function searchBooks(title?: string, author?: string) {
+  if (!title && !author) return [];
+  title = encodeURIComponent(title || '');
+  if (author) {
+    title += `+inauthor:${encodeURIComponent(author)}`;
+  }
   let query = 'https://www.googleapis.com/books/v1/volumes?q='+title;
 
   query += `&key=${GOOGLE_API_KEY}`;
@@ -26,7 +31,25 @@ export async function searchBooks(title?: string, author?: string) {
 }
 }
 
-export async function parseGoogleBooksResponse(response: any) {
+export async function getBookInfo(volumeId: string) {
+  const query = `https://www.googleapis.com/books/v1/volumes/${volumeId}?key=${GOOGLE_API_KEY}`;
+  console.log('query:', query);
+
+  try {
+    const response = await axios.get(query);
+    if (response.status === 200) {
+      return response.data;
+    } else {
+      console.error('Received non-200 status code:', response.status);
+      return {};
+    }
+  } catch (error) {
+    console.error('Error fetching book info:', error);
+    return {};
+  }
+}
+
+export async function parseSearchedResponse(response: any) {
   const books = response.filter((item: any) => {
     const volumeInfo = item.volumeInfo;
     return volumeInfo.title && volumeInfo.authors?.[0] && volumeInfo.imageLinks?.thumbnail && volumeInfo.pageCount;
@@ -41,7 +64,7 @@ export async function parseGoogleBooksResponse(response: any) {
       author: volumeInfo.authors[0],
       link: volumeInfo.previewLink || '',
       thumbnail: volumeInfo.imageLinks.thumbnail,
-      coverImage: volumeInfo.imageLinks.medium ||volumeInfo.imageLinks.small || volumeInfo.imageLinks.thumbnail,
+      coverImage: volumeInfo.imageLinks.small || volumeInfo.imageLinks.thumbnail,
       rating: 0,
       pages: volumeInfo.pageCount,
       dateRead: new Date(),
@@ -52,62 +75,3 @@ export async function parseGoogleBooksResponse(response: any) {
   return books;
 }
 
-export async function addCoverImage(book: BookItem) {
-  if (!book.title || !book.author) {
-    console.error('Missing required book information');
-    return book;
-  }
-
-  const encodedQuery = encodeURIComponent(`${book.title} author:${book.author} isbn:${book.isbn}`);
-  const query = `https://www.googleapis.com/books/v1/volumes?q=${encodedQuery}&key=${GOOGLE_API_KEY}&maxResults=10`;
-
-  try {
-    const response = await axios.get(query);
-    if (!response.data.items?.length) {
-      return book;
-    }
-
-    const items = response.data.items;
-    const bestMatch = items.find((item: { volumeInfo: { title: string; }; }) => 
-      item.volumeInfo?.title?.toLowerCase().includes(book.title.toLowerCase())
-    ) || items[0];
-
-    if (bestMatch?.volumeInfo?.imageLinks) {
-      book.coverImage = bestMatch.volumeInfo.imageLinks.medium || 
-                       bestMatch.volumeInfo.imageLinks.small || 
-                       bestMatch.volumeInfo.imageLinks.thumbnail;
-    }
-
-    return book;
-  } catch (error) {
-    console.error('Error fetching cover image:', error);
-    return book;
-  }
-}
-export async function returnCoverImage(book: BookItem) {
-  const encodedQuery = encodeURIComponent(`${book.title} author:${book.author}`);
-  const query = `https://www.googleapis.com/books/v1/volumes?q=${encodedQuery}&key=${GOOGLE_API_KEY}`;
-
-  try {
-    const response = await axios.get(query);
-    if (!response.data.items?.length) {
-      return '';
-    }
-
-    const items = response.data.items;
-    const bestMatch = items.find((item: { volumeInfo: { title: string; }; }) => 
-      item.volumeInfo?.title?.toLowerCase().includes(book.title.toLowerCase())
-    ) || items[0];
-
-    if (bestMatch?.volumeInfo?.imageLinks) {
-      return bestMatch.volumeInfo.imageLinks.medium || 
-             bestMatch.volumeInfo.imageLinks.small || 
-             bestMatch.volumeInfo.imageLinks.thumbnail;
-    }
-
-    return book.thumbnail;
-  } catch (error) {
-    console.error('Error fetching cover image:', error);
-    return 'error';
-  }
-}

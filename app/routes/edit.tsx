@@ -13,7 +13,7 @@ import {
 } from "../components/ui/table";
 import { ActionFunctionArgs } from "@remix-run/node";
 import { Input } from "~/components/ui/input";
-import { parseGoogleBooksResponse, searchBooks } from "~/lib/googlebooks.server";
+import { parseSearchedResponse, searchBooks } from "~/lib/googlebooks.server";
 import { addSearchedBook, createOrUpdateList } from "~/lib/rssParser.server";
 import { commitSession, getSession } from "~/sessions";
 import { BookForm } from "~/components/BookForm";
@@ -82,7 +82,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     case "search":
       const search = await searchBooks(formData.get("search") as string);
-      const searchedBooks = await parseGoogleBooksResponse(search);
+      const searchedBooks = await parseSearchedResponse(search);
       return Response.json({ searchBooks: searchedBooks });
 
     case "add":
@@ -144,7 +144,7 @@ export default function Edit() {
                   <TableRow key={book.id}>
                     <TableCell>
                       <img
-                        src={book.coverImage}
+                        src={book.thumbnail}
                         alt={`Cover of ${book.title}`}
                         width={50}
                       />
@@ -208,7 +208,7 @@ export default function Edit() {
                   <TableRow key={index}>
                     <TableCell>
                       <img
-                        src={book.coverImage}
+                        src={book.thumbnail}
                         alt={`Cover of ${book.title}`}
                         width={50}
                       />
