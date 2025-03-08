@@ -5,6 +5,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { initializeListId } from "~/lib/stuff.server";
+import { useNavigation } from "@remix-run/react";
 
 export async function action({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -59,6 +60,7 @@ export async function loader({ request }: { request: Request }) {
 // Main component
 export default function Index() {
   const { ok } = useLoaderData<typeof loader>();
+  const navigation = useNavigation();
 
   return (
     <div className="flex justify-center items-center h-screen flex-col">
@@ -83,7 +85,13 @@ export default function Index() {
             type="text"
             placeholder="Goodread's RSS URL"
           />
-          <Button type="submit">Edit</Button>
+          {navigation.state === "idle" ? (
+            <Button type="submit">Edit</Button>
+          ) : (
+            <Button type="submit" disabled>
+              Loading...
+            </Button>
+          )}
         </Form>
         {!ok && (
           <div>
