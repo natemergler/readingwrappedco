@@ -81,7 +81,7 @@ export default function Index() {
 
   return (
     <div className="items-center justify-center w-screen h-screen overflow-hidden">
-      <motion.div ref={constraintsRef} className="size-full">
+      <motion.div ref={constraintsRef} className="w-full h-full">
         <IntroAnim
           booksCount={bookList.length}
           pages={data.totalPages}
