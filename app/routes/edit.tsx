@@ -13,13 +13,13 @@ import {
 } from "../components/ui/table";
 import { ActionFunctionArgs } from "@remix-run/node";
 import { Input } from "~/components/ui/input";
-import { parseGoogleBooksResponse, searchBooks } from "~/utils/googlebooks";
-import { addSearchedBook, createOrUpdateList } from "~/utils/rssParser";
+import { parseSearchedResponse, searchBooks } from "~/lib/googlebooks.server";
+import { addSearchedBook, createOrUpdateList } from "~/lib/rssParser.server";
 import { commitSession, getSession } from "~/sessions";
-import { nanoid } from "nanoid";
 import { BookForm } from "~/components/BookForm";
 import { motion } from "motion/react";
 import { Loader2 } from "lucide-react";
+import { initializeListId } from "~/lib/stuff.server";
 
 // Define the type of data the loader returns
 interface LoaderData {
@@ -33,17 +33,12 @@ interface SearchBooksData {
 
 export async function loader({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
-  const listId = session.get("listId");
-  if (!listId) {
-    let randomId = nanoid(8);
-    while (
-      (await prisma.list.findUnique({ where: { id: randomId } })) != null
-    ) {
-      randomId = nanoid(14);
-    }
-    session.set("listId", randomId);
-    await createOrUpdateList(randomId);
+  const sessionId = session.get("listId");
+  const date = session.get("date")
+  if (!sessionId) {
+    await initializeListId(session);
   }
+  
   try {
     const feedUrl = String(session.get("listId"));
 
@@ -87,7 +82,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     case "search":
       const search = await searchBooks(formData.get("search") as string);
-      const searchedBooks = await parseGoogleBooksResponse(search);
+      const searchedBooks = await parseSearchedResponse(search);
       return Response.json({ searchBooks: searchedBooks });
 
     case "add":
@@ -122,7 +117,9 @@ export default function Edit() {
             }}
             className="flex justify-center items-center"
           >
-            <Link to="/wrapped"><Button variant={"magic"}>Wrap Up Your List</Button></Link>
+            <form action="/wrapped" method="post">
+              <Button variant={"magic"} type="submit">Wrap Up Your List</Button>
+            </form>
           </motion.div>
         )}
 
@@ -147,7 +144,7 @@ export default function Edit() {
                   <TableRow key={book.id}>
                     <TableCell>
                       <img
-                        src={book.coverImage}
+                        src={book.thumbnail}
                         alt={`Cover of ${book.title}`}
                         width={50}
                       />
@@ -211,7 +208,7 @@ export default function Edit() {
                   <TableRow key={index}>
                     <TableCell>
                       <img
-                        src={book.coverImage}
+                        src={book.thumbnail}
                         alt={`Cover of ${book.title}`}
                         width={50}
                       />

@@ -6,7 +6,7 @@ type SessionData = {
 };
 
 type SessionFlashData = {
-  error: string;
+  date: Date;
 };
 
 const { getSession, commitSession, destroySession } =

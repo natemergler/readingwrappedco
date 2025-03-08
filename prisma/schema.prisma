@@ -39,8 +39,11 @@ model Book {
 
 model Wrapper {
   id        String   @id
-  booksRead Book[]
+  books Book[]
   date      DateTime
   url       String?
   wrapped   Boolean  @default(false)
+  numberOfBooks Int
+  totalPages Int
+  averageRating Float
 }

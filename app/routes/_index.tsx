@@ -1,82 +1,98 @@
-import { Form, useLoaderData, json, Link, redirect } from "@remix-run/react";
-import { createOrUpdateList, parseRSS } from "~/utils/rssParser";
-import { getSession, commitSession, destroySession } from "../sessions";
+import { Form, useLoaderData, redirect } from "@remix-run/react";
+import { parseRSS } from "~/lib/rssParser.server";
+import { getSession, commitSession } from "../sessions";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
-import { useNavigation } from "@remix-run/react";
-import { Loader2 } from "lucide-react";
-import { nanoid } from "nanoid";
-import { prisma } from "~/db.server";
+import { initializeListId } from "~/lib/stuff.server";
 
-export async function loader({ request }: { request: Request }) {
+export async function action({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
-  const url = new URL(request.url);
-  const feedUrl = url.searchParams.get("feedUrl");
-
+  const formData = await request.formData();
+  const feedUrl = formData
+    .get("feedUrl")
+    ?.toString()
+    .replace(/^(?:https?:\/\/)?(?:www\.)?/i, "");
   const sessionId = session.get("listId");
-  if (!sessionId) {
-    let randomId = nanoid(8);
-    while (
-      (await prisma.list.findUnique({ where: { id: randomId } })) != null
-    ) {
-      randomId = nanoid(14);
-    }
-    session.set("listId", randomId);
-    await createOrUpdateList(randomId, feedUrl ?? undefined);
-  }
 
-  if (feedUrl == "") { return redirect("/edit"); }
-  if (feedUrl && /goodreads\.com\/review\/list_rss\//.test(feedUrl)) {
+  if (feedUrl) {
     try {
-      const cleanUrl = feedUrl.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '');
-      await parseRSS(cleanUrl);
-      await createOrUpdateList(String(session.get("listId")), cleanUrl ?? undefined);
+      await parseRSS(String(sessionId), feedUrl);
+      session.flash("date", new Date());
       return redirect("/edit", {
         headers: {
           "Set-Cookie": await commitSession(session),
         },
       });
     } catch (error) {
-      return Response.json({
-        ok: false,
-      });
+      return Response.json({ ok: false });
     }
   }
-  return Response.json({ ok: true });
+  return redirect("/edit", {
+    headers: {
+      "Set-Cookie": await commitSession(session),
+    },
+  });
 }
 
+export async function loader({ request }: { request: Request }) {
+  const session = await getSession(request.headers.get("Cookie"));
+  const sessionTime = session.get("date");
+
+  if (!sessionTime) {
+    const newSessionId = await initializeListId(session);
+    session.set("listId", newSessionId);
+
+    return Response.json(
+      { ok: true },
+      {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      }
+    );
+  }
+
+  return Response.json({ ok: true });
+}
 
 // Main component
 export default function Index() {
   const { ok } = useLoaderData<typeof loader>();
-  const navigation = useNavigation();
 
   return (
-    <div className="flex justify-center items-center h-screen">
+    <div className="flex justify-center items-center h-screen flex-col">
       <div className="grid gap-5">
         <Label htmlFor="feedUrl">Reading Wrapped</Label>
         <p className="text-center">
-          Enter your Goodreads URL to generate a reading wrap-up. <br />
-           or alternatively, click edit to make a list.
-          </p>
-        <Form action="/" method="get" className="gap-2 flex flex-col">
+          Enter{" "}
+          <a
+            href="https://www.goodreads.com/review/list"
+            target="_blank"
+            className="text-destructive underline"
+          >
+            your Goodreads URL
+          </a>{" "}
+          to generate a reading wrap-up. <br />
+          or alternatively, click edit to make a list.
+        </p>
+        <Form method="post" className="gap-2 flex flex-col">
           <Input
             className="w-auto"
             name="feedUrl"
             type="text"
             placeholder="Goodread's RSS URL"
           />
-          {navigation.state === "loading" ? (
-            <Button disabled>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Please wait
-            </Button>
-          ) : (
-            <Button>Edit</Button>
-          )}
+          <Button type="submit">Edit</Button>
         </Form>
-        {!ok && <div><p className="text-red-500">Please enter a valid book list</p></div>}
+        {!ok && (
+          <div>
+            <p className="text-red-500">Please enter a valid book list</p>
+          </div>
+        )}
+      </div>
+      <div className="fixed bottom-0 left-0 h-10 w-full p-2">
+        <p className="text-center">made with love &lt;3</p>
       </div>
     </div>
   );
