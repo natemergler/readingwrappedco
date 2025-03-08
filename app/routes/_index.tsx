@@ -6,6 +6,7 @@ import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { initializeListId } from "~/lib/stuff.server";
 import { useNavigation } from "@remix-run/react";
+import { Loader2 } from "lucide-react";
 
 export async function action({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -89,7 +90,8 @@ export default function Index() {
             <Button type="submit">Edit</Button>
           ) : (
             <Button type="submit" disabled>
-              Loading...
+              <Loader2 className="animate-spin px-1" />
+              Loading
             </Button>
           )}
         </Form>
