@@ -7,14 +7,14 @@ interface IntroProps {
   booksCount?: number;
   pages?: number;
   averageRating?: number;
-  url?: string;
+  shortUrl?: string;
 }
 
 export default function IntroAnim({
   booksCount = 0,
   pages = 0,
   averageRating = 0,
-  url = "",
+  shortUrl = "",
 }: IntroProps) {
   const stars = Array.from({ length: 5 }, (_, i) => i + 1);
 
@@ -24,7 +24,7 @@ export default function IntroAnim({
       transition={{ type: "spring", bounce: 0.4 }}
       className="text-4xl font-bold text-right p-4"
     >
-      <h2><Link to={"readingwrapped.co"+{url}}>readingwrapped.co{url}</Link></h2>
+      <h2><Link to={shortUrl}>readingwrapped.co{shortUrl}</Link></h2>
       <motion.h4
         initial={{ scaleY: 0 }}
         animate={{ scaleY: 1 }}

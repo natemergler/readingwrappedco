@@ -86,7 +86,7 @@ export default function Index() {
           booksCount={bookList.length}
           pages={data.totalPages}
           averageRating={data.averageRating}
-          url={"/wrapped"+data.url}
+          shortUrl={"/wrapped"+data.url}
         />
         <div
           id="dynamic-grid"
