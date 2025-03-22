@@ -10,7 +10,7 @@ export async function initializeListId(session: Session) {
     return randomId;
   }
 
-  import { imageHash } from "image-hash";
+import { imageHash } from "image-hash";
 
 // Known hash for the default/placeholder Google Books cover image
 const PLACEHOLDER_HASH = "ffffffffffffe007e007e007ff9ff81ff83fffff80018001ffffffffffffffff";

@@ -15,26 +15,49 @@ export async function action({ request }: { request: Request }) {
     .get("feedUrl")
     ?.toString()
     .replace(/^(?:https?:\/\/)?(?:www\.)?/i, "");
-  const sessionId = session.get("listId");
-
-  if (feedUrl) {
-    try {
-      await parseRSS(String(sessionId), feedUrl);
-      session.flash("date", new Date());
-      return redirect("/edit", {
-        headers: {
-          "Set-Cookie": await commitSession(session),
-        },
-      });
-    } catch (error) {
-      return Response.json({ ok: false });
-    }
+  
+  if (!feedUrl) {
+    return redirect("/edit", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
   }
-  return redirect("/edit", {
-    headers: {
-      "Set-Cookie": await commitSession(session),
-    },
-  });
+
+  try {
+    // If no session listId exists, create one
+    if (!session.get("listId")) {
+      const newSessionId = await initializeListId(session);
+      session.set("listId", newSessionId);
+    }
+    
+    const sessionId = session.get("listId");
+    console.log("Processing feed with session ID:", sessionId);
+    
+    // Ensure sessionId exists before using it
+    if (!sessionId) {
+      throw new Error("Session ID is required");
+    }
+    
+    // Parse RSS and get the list of books
+    await parseRSS(sessionId as string, feedUrl);
+    
+    // This is crucial - update the session with the current list ID
+    session.set("listId", sessionId);
+    session.flash("date", new Date());
+    
+    return redirect("/edit", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  } catch (error) {
+    console.error("Error processing RSS feed:", error);
+    return Response.json({ 
+      ok: false, 
+      error: error instanceof Error ? error.message : "Failed to process the Goodreads URL" 
+    });
+  }
 }
 
 export async function loader({ request }: { request: Request }) {
