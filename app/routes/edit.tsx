@@ -1,4 +1,4 @@
-import { useLoaderData, useFetcher, Link } from "@remix-run/react";
+import { useLoaderData, useFetcher } from "@remix-run/react";
 import { prisma } from "~/db.server";
 import { Book } from "@prisma/client";
 import { Button } from "~/components/ui/button";
@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table";
-import { ActionFunctionArgs } from "@remix-run/node";
+import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Input } from "~/components/ui/input";
 import { parseSearchedResponse, searchBooks } from "~/lib/googlebooks.server";
 import { addSearchedBook, createOrUpdateList } from "~/lib/rssParser.server";
@@ -33,34 +33,51 @@ interface SearchBooksData {
 
 export async function loader({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
-  const sessionId = session.get("listId");
-  const date = session.get("date")
-  if (!sessionId) {
-    await initializeListId(session);
+  const listId = session.get("listId")?.toString();
+  
+  console.log("Edit route - Session list ID:", listId);
+  
+  // If no listId in session, redirect to create a new list
+  if (!listId) {
+    // Generate a new list ID
+    const newSessionId = await initializeListId(session);
+    session.set("listId", newSessionId);
+    
+    return redirect("/edit", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  }
+
+  const list = await prisma.list.findUnique({ where: { id: listId } });
+  
+  // If list doesn't exist, create an empty one
+  if (!list) {
+    console.log("No list found, creating empty list for ID:", listId);
+    // Create a new empty list with this ID
+    await createOrUpdateList(listId, "");
   }
   
-  try {
-    const feedUrl = String(session.get("listId"));
-
-    const books = await prisma.book.findMany({ where: { listId: feedUrl }, orderBy: { dateRead: 'asc' } });
-    return Response.json(
-      { books },
-      {
-        headers: {
-          "Set-Cookie": await commitSession(session),
-        },
-      }
-    );
-  } catch (e) {
-    return Response.json({ error: "Failed to fetch books" });
-  }
+  // Fetch books for this list
+  const books = await prisma.book.findMany({ where: { listId: listId?.toString() }, orderBy: { dateRead: 'asc' } });
+  console.log(`Found ${books.length} books for list ID ${listId}`);
+  
+  return Response.json({ 
+    books, 
+    listId,
+    date: session.get("date")
+  }, {
+    headers: {
+      "Set-Cookie": await commitSession(session)
+    }
+  });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const listId = session.get("listId");
   const formData = await request.formData();
-  const bookId = formData.get("bookId");
   const action = formData.get("rating") ? "rating" :
                  formData.get("delete") ? "delete" :
                  formData.get("search") ? "search" :

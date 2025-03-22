@@ -5,6 +5,8 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { initializeListId } from "~/lib/stuff.server";
+import { useNavigation } from "@remix-run/react";
+import { Loader2 } from "lucide-react";
 
 export async function action({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -13,26 +15,49 @@ export async function action({ request }: { request: Request }) {
     .get("feedUrl")
     ?.toString()
     .replace(/^(?:https?:\/\/)?(?:www\.)?/i, "");
-  const sessionId = session.get("listId");
-
-  if (feedUrl) {
-    try {
-      await parseRSS(String(sessionId), feedUrl);
-      session.flash("date", new Date());
-      return redirect("/edit", {
-        headers: {
-          "Set-Cookie": await commitSession(session),
-        },
-      });
-    } catch (error) {
-      return Response.json({ ok: false });
-    }
+  
+  if (!feedUrl) {
+    return redirect("/edit", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
   }
-  return redirect("/edit", {
-    headers: {
-      "Set-Cookie": await commitSession(session),
-    },
-  });
+
+  try {
+    // If no session listId exists, create one
+    if (!session.get("listId")) {
+      const newSessionId = await initializeListId(session);
+      session.set("listId", newSessionId);
+    }
+    
+    const sessionId = session.get("listId");
+    console.log("Processing feed with session ID:", sessionId);
+    
+    // Ensure sessionId exists before using it
+    if (!sessionId) {
+      throw new Error("Session ID is required");
+    }
+    
+    // Parse RSS and get the list of books
+    await parseRSS(sessionId as string, feedUrl);
+    
+    // This is crucial - update the session with the current list ID
+    session.set("listId", sessionId);
+    session.flash("date", new Date());
+    
+    return redirect("/edit", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  } catch (error) {
+    console.error("Error processing RSS feed:", error);
+    return Response.json({ 
+      ok: false, 
+      error: error instanceof Error ? error.message : "Failed to process the Goodreads URL" 
+    });
+  }
 }
 
 export async function loader({ request }: { request: Request }) {
@@ -59,6 +84,7 @@ export async function loader({ request }: { request: Request }) {
 // Main component
 export default function Index() {
   const { ok } = useLoaderData<typeof loader>();
+  const navigation = useNavigation();
 
   return (
     <div className="flex justify-center items-center h-screen flex-col">
@@ -83,7 +109,14 @@ export default function Index() {
             type="text"
             placeholder="Goodread's RSS URL"
           />
-          <Button type="submit">Edit</Button>
+          {navigation.state === "idle" ? (
+            <Button type="submit">Edit</Button>
+          ) : (
+            <Button type="submit" disabled>
+              <Loader2 className="animate-spin px-1" />
+              Loading
+            </Button>
+          )}
         </Form>
         {!ok && (
           <div>
