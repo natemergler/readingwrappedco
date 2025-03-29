@@ -1,7 +1,7 @@
 // Define the structure of a parsed book item
 import { XMLParser } from "fast-xml-parser";
 import { prisma } from "~/db.server";
-import {  getBookInfo, searchBooks } from "./googlebooks.server";
+import { getBookInfo, searchBooks } from "./googlebooks.server";
 import { checkImageHash } from "./stuff.server";
 import { time } from "motion/react";
 
@@ -59,9 +59,7 @@ export async function cleanFeedContent(feedContent: string): Promise<string> {
 
   // Ensure URL ends with ?shelf=read and sort parameters
   const baseUrl = `goodreads.com/review/${correctType}/${numbers}?shelf=read&sort=date_read&order=d`;
-  return (
-    baseUrl
-  );
+  return baseUrl;
 }
 
 async function fetchRssFeed(url: string): Promise<string> {
@@ -72,7 +70,6 @@ async function fetchRssFeed(url: string): Promise<string> {
   } catch (e) {
     throw new Error();
     return "";
-
   }
 }
 
@@ -84,7 +81,7 @@ function parseXML(xmlString: string): any {
 export async function createOrUpdateList(
   listId: string,
   feedContent?: string
-): Promise<void> {
+): Promise<string> {
   if (!listId) {
     throw new Error("listId is required");
   }
@@ -119,6 +116,8 @@ export async function createOrUpdateList(
         },
       });
     }
+    
+    return listId; // Return the listId
   } catch (e) {
     console.error("Error in createOrUpdateList:", e);
     throw new Error("Failed to create or update list");
@@ -142,52 +141,57 @@ function extractGoodReadsBook(item: any): BookItem {
 
 export async function createBookIfNeeded(
   bookItem: BookItem,
-  feedContent: string
+  listId: string
 ): Promise<void> {
   const thresholdDate = new Date(2024, 0, 1);
-  if (
-    bookItem.dateRead > thresholdDate &&
-    (await prisma.book.findFirst({
-      where: {
-        AND: {
-          listId: feedContent,
-          title: bookItem.title.toString(),
-          author: bookItem.author,
-        },
+  if (bookItem.dateRead <= thresholdDate) {
+    return; // Skip books read before 2024
+  }
+
+  // First find if book already exists
+  let book = await prisma.book.findFirst({
+    where: {
+      AND: {
+        title: bookItem.title.toString(),
+        author: bookItem.author,
       },
-    })) === null
-  ) {
+    },
+  });
 
-    // const getGoogleId = await searchBooks(bookItem.title, bookItem.author);
-    
-    // // Add null check before accessing [0]
-    // if (!getGoogleId || !Array.isArray(getGoogleId) || getGoogleId.length === 0) {
-    //   console.log("Expected array is undefined or empty");
-    //   // Provide a fallback value or return early
-    //   return; // or return a default value
-    // }
-    
-    // // Now it's safe to access [0]
-    // const googleId = getGoogleId[0].id;
-    
-    // // Add half-second delay before making the image request
+  // If book doesn't exist, create it
+  if (!book) {
+    const coverImage = bookItem.thumbnail;
 
-    
-    const coverImage = bookItem.thumbnail //await checkImageHash(`https://books.google.com/books/content?id=${googleId}&printsec=frontcover&img=1&zoom=0&edge=curl&source=gbs_api`)
-
-    await prisma.book.create({
+    book = await prisma.book.create({
       data: {
         title: bookItem.title.toString(),
         author: bookItem.author,
         goodReadsLink: bookItem.link,
         coverImage: coverImage,
         thumbnail: bookItem.thumbnail,
-        rating: bookItem.rating,
         pages: bookItem.pages,
-        dateRead: bookItem.dateRead,
         average_rating: bookItem.average_rating,
         isbn: String(bookItem.isbn),
-        listId: feedContent,
+      },
+    });
+  }
+
+  // Check if this book is already in the list
+  const existingListBook = await prisma.listBook.findFirst({
+    where: {
+      bookId: book.id,
+      listId: listId,
+    },
+  });
+
+  // If not, add it to the list
+  if (!existingListBook) {
+    await prisma.listBook.create({
+      data: {
+        bookId: book.id,
+        listId: listId,
+        rating: bookItem.rating,
+        dateRead: bookItem.dateRead,
       },
     });
   }
@@ -197,37 +201,9 @@ export async function addSearchedBook(
   bookItem: BookItem,
   feedContent: string
 ): Promise<void> {
-  await createOrUpdateList(feedContent);
+  // Get the proper listId from createOrUpdateList
+  const listId = await createOrUpdateList(feedContent);
 
-  if (
-    (await prisma.book.findFirst({
-      where: {
-        AND: {
-          listId: feedContent,
-          title: bookItem.title,
-          author: bookItem.author,
-        },
-      },
-    })) === null
-  ) {
-    const getGoogleId = await searchBooks(bookItem.title, bookItem.author);
-    const googleId = getGoogleId[0].id;
-    const coverImage = await checkImageHash(`https://books.google.com/books/content?id=${googleId}&printsec=frontcover&img=1&zoom=0&edge=curl&source=gbs_api`)
-
-    await prisma.book.create({
-      data: {
-        title: bookItem.title,
-        author: bookItem.author,
-        goodReadsLink: bookItem.link,
-        thumbnail: bookItem.thumbnail,
-        coverImage: coverImage,
-        rating: bookItem.rating,
-        pages: bookItem.pages,
-        dateRead: bookItem.dateRead,
-        average_rating: bookItem.average_rating,
-        isbn: bookItem.isbn,
-        listId: feedContent,
-      },
-    });
-  }
+  // Use the returned listId when creating the book
+  await createBookIfNeeded(bookItem, listId);
 }
