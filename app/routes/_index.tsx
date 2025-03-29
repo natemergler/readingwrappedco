@@ -4,7 +4,7 @@ import { getSession, commitSession } from "../sessions";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
-import { initializeListId } from "~/lib/stuff.server";
+import { initializeListId } from "~/lib/dbfunctions.server";
 import { useNavigation } from "@remix-run/react";
 import { Loader2 } from "lucide-react";
 
