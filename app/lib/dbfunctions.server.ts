@@ -98,14 +98,13 @@ export async function createOrUpdateList(
 
   // If book doesn't exist, create it
   if (!book) {
-    const coverImage = bookItem.thumbnail;
 
     book = await prisma.book.create({
       data: {
         title: bookItem.title.toString(),
         author: bookItem.author,
         goodReadsLink: bookItem.link,
-        coverImage: coverImage,
+        coverImage: bookItem.thumbnail,
         thumbnail: bookItem.thumbnail,
         pages: bookItem.pages,
         average_rating: bookItem.average_rating,
