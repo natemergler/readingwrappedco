@@ -10,8 +10,12 @@ export async function action({ request }: { request: Request }) {
     if (!listId ) {
       return redirect("/");
     }
-    const bookList = await prisma.book.findMany({ where: { listId: listId } });
-    const data = await wrapItUp(bookList, listId);
+    const listBooks = await prisma.listBook.findMany({ 
+      where: { listId: listId },
+      include: { book: true }
+    });
+    const books = listBooks.map(item => item.book);
+    const data = await wrapItUp(listId);
     return redirect(data, {
       headers: { "Set-Cookie": await destroySession(session) },
     });

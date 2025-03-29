@@ -8,9 +8,9 @@ import IntroAnim from "~/components/introAnim";
 import { prisma } from "~/db.server";
 
 export async function loader({ params }: LoaderFunctionArgs) {
-  const books = await prisma.book.findMany({
-    where: { listId: params.listId },
-    orderBy: { dateRead: "asc" },
+  const books = await prisma.wrapperBook.findMany({
+    where: { wrapperId: params.listId },
+    include: { book: true },
   });
 
   const wrapped = await prisma.wrapper.findFirst({
@@ -86,7 +86,7 @@ export default function Index() {
           booksCount={bookList.length}
           pages={data.totalPages}
           averageRating={data.averageRating}
-          shortUrl={"/wrapped"+data.url}
+          shortUrl={"/wrapped" + data.url}
         />
         <div
           id="dynamic-grid"
