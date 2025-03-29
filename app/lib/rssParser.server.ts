@@ -1,9 +1,6 @@
 // Define the structure of a parsed book item
 import { XMLParser } from "fast-xml-parser";
 import { prisma } from "~/db.server";
-import { getBookInfo, searchBooks } from "./googlebooks.server";
-import { checkImageHash } from "./stuff.server";
-import { time } from "motion/react";
 
 export interface BookItem {
   title: string;
