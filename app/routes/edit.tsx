@@ -98,7 +98,7 @@ export async function action({ request }: ActionFunctionArgs) {
       return Response.json({ ok: true });
 
     case "delete":
-      await prisma.book.delete({
+      await prisma.listBook.delete({
         where: { id: parseInt(formData.get("bookId") as string) },
       });
       return Response.json({ ok: true });
