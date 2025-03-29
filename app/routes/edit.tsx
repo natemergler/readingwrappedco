@@ -1,6 +1,6 @@
 import { useLoaderData, useFetcher } from "@remix-run/react";
 import { prisma } from "~/db.server";
-import { Book } from "@prisma/client";
+import { Book, ListBook } from "@prisma/client";
 import { Button } from "~/components/ui/button";
 import {
   Table,
@@ -14,16 +14,17 @@ import {
 import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Input } from "~/components/ui/input";
 import { parseSearchedResponse, searchBooks } from "~/lib/googlebooks.server";
-import { addSearchedBook, createOrUpdateList } from "~/lib/rssParser.server";
+import { addSearchedBook } from "~/lib/dbfunctions.server";
+import { createOrUpdateList } from "~/lib/dbfunctions.server";
 import { commitSession, getSession } from "~/sessions";
 import { BookForm } from "~/components/BookForm";
 import { motion } from "motion/react";
 import { Loader2 } from "lucide-react";
-import { initializeListId } from "~/lib/stuff.server";
+import { initializeListId } from "~/lib/dbfunctions.server";
 
 // Define the type of data the loader returns
 interface LoaderData {
-  books?: Book[];
+  books?: (ListBook & { book: Book })[];
   error?: string;
 }
 
@@ -59,8 +60,13 @@ export async function loader({ request }: { request: Request }) {
     await createOrUpdateList(listId, "");
   }
   
-  // Fetch books for this list
-  const books = await prisma.book.findMany({ where: { listId: listId?.toString() }, orderBy: { dateRead: 'asc' } });
+  // Fetch books for this list - include the Book relation
+  const books = await prisma.listBook.findMany({ 
+    where: { listId: listId?.toString() }, 
+    orderBy: { dateRead: 'asc' },
+    include: { book: true } // Include the related Book entity
+  });
+  
   console.log(`Found ${books.length} books for list ID ${listId}`);
   
   return Response.json({ 
@@ -85,7 +91,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   switch (action) {
     case "rating":
-      await prisma.book.update({
+      await prisma.listBook.update({
         where: { id: parseInt(formData.get("bookId") as string) },
         data: { rating: parseInt(formData.get("rating") as string) },
       });
@@ -161,13 +167,13 @@ export default function Edit() {
                   <TableRow key={book.id}>
                     <TableCell>
                       <img
-                        src={book.thumbnail}
-                        alt={`Cover of ${book.title}`}
+                        src={book.book.thumbnail}
+                        alt={`Cover of ${book.book.title}`}
                         width={50}
                       />
                     </TableCell>
-                    <TableCell>{book.title}</TableCell>
-                    <TableCell>{book.author}</TableCell>
+                    <TableCell>{book.book.title}</TableCell>
+                    <TableCell>{book.book.author}</TableCell>
 
                     <TableCell>
                       <BookForm bookId={book.id} rating={book.rating} />
