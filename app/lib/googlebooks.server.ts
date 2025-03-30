@@ -66,7 +66,7 @@ export async function parseSearchedResponse(response: any) {
           (id: any) => id.type === "ISBN_13" || id.type === "ISBN_10"
         )?.identifier || "";
 
-      const coverImage = makeBookCoverURL(item.id);
+      const coverImage = getBookCover(item.id);
       return {
         title: volumeInfo.title,
         author: volumeInfo.authors[0],
@@ -101,23 +101,7 @@ export async function checkImageHash(imageUrl: string): Promise<string> {
   });
 }
 
-export function makeBookCoverURL(googleId: string): string {
+export async function getBookCover(googleId: string): Promise<string> {
   const coverImage = `https://books.google.com/books/content?id=${googleId}&printsec=frontcover&img=1&zoom=0&edge=curl&source=gbs_api`;
-  return coverImage;
-}
-
-export async function getVolumeId(isbn: string): Promise<string | null> {
-  const query = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${GOOGLE_API_KEY}`;
-  try {
-    const response = await axios.get(query);
-    if (response.status === 200 && response.data.items) {
-      return response.data.items[0].id;
-    } else {
-      console.error("Received non-200 status code:", response.status);
-      return null;
-    }
-  } catch (error) {
-    console.error("Error fetching volume ID:", error);
-    return null;
-  }
+  return await checkImageHash(coverImage);
 }
