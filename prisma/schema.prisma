@@ -11,39 +11,63 @@ datasource db {
 }
 
 model List {
-  id          String   @id
-  books       Book[]
-  date        DateTime
-  url         String?
-  wrapped     Boolean  @default(false)
+  id           String     @id
+  date         DateTime
+  url          String?
+  wrapped      Boolean    @default(false)
   goodreadsUrl String?
+  
+  // Relations
+  listBooks    ListBook[]
 }
 
 model Book {
-  id             Int      @id @default(autoincrement())
-  title          String
-  author         String
-  goodReadsLink  String
-  thumbnail      String
-  coverImage     String
-  rating         Float
-  pages          Float
-  dateRead       DateTime
+  id            Int         @id @default(autoincrement())
+  title         String
+  author        String
+  goodReadsLink String
+  thumbnail     String
+  coverImage    String
+  pages         Float
   average_rating Float
-  isbn           String?
-  list           List     @relation(fields: [listId], references: [id])
-  wrapper        Wrapper? @relation(fields: [wrapperId], references: [id])
-  wrapperId      String?
-  listId         String
+  isbn          String?
+  
+  // Relations
+  listBooks     ListBook[]
+  wrapperBooks  WrapperBook[]
+}
+
+model ListBook {
+  id        Int      @id @default(autoincrement())
+  book      Book     @relation(fields: [bookId], references: [id])
+  bookId    Int
+  list      List     @relation(fields: [listId], references: [id])
+  listId    String
+  rating    Float
+  dateRead  DateTime
+  
+  @@unique([bookId, listId])
 }
 
 model Wrapper {
-  id        String   @id
-  books Book[]
-  date      DateTime
-  url       String?
-  wrapped   Boolean  @default(false)
+  id            String        @id
+  date          DateTime
+  url           String?
+  wrapped       Boolean       @default(false)
   numberOfBooks Int
-  totalPages Int
+  totalPages    Int
   averageRating Float
+  
+  // Relations
+  wrapperBooks  WrapperBook[]
+}
+
+model WrapperBook {
+  id        Int      @id @default(autoincrement())
+  book      Book     @relation(fields: [bookId], references: [id])
+  bookId    Int
+  wrapper   Wrapper  @relation(fields: [wrapperId], references: [id])
+  wrapperId String
+  
+  @@unique([bookId, wrapperId])
 }

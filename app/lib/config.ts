@@ -7,7 +7,7 @@ export interface GoogleBooksResponse {
   volumeInfo: GoogleBooksVolumeInfo;
 }
 
-export interface GoogleBooksVolumeInfo {
+export interface GoogleBooksVolumeInfo { 
   title: string;
   authors?: string[];
   previewLink?: string;

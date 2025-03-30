@@ -1,9 +1,6 @@
 // Define the structure of a parsed book item
 import { XMLParser } from "fast-xml-parser";
-import { prisma } from "~/db.server";
-import {  getBookInfo, searchBooks } from "./googlebooks.server";
-import { checkImageHash } from "./stuff.server";
-import { time } from "motion/react";
+import { createBookIfNeeded, createOrUpdateList } from "./dbfunctions.server";
 
 export interface BookItem {
   title: string;
@@ -59,9 +56,7 @@ export async function cleanFeedContent(feedContent: string): Promise<string> {
 
   // Ensure URL ends with ?shelf=read and sort parameters
   const baseUrl = `goodreads.com/review/${correctType}/${numbers}?shelf=read&sort=date_read&order=d`;
-  return (
-    baseUrl
-  );
+  return baseUrl;
 }
 
 async function fetchRssFeed(url: string): Promise<string> {
@@ -72,57 +67,12 @@ async function fetchRssFeed(url: string): Promise<string> {
   } catch (e) {
     throw new Error();
     return "";
-
   }
 }
 
 function parseXML(xmlString: string): any {
   const parser = new XMLParser();
   return parser.parse(xmlString);
-}
-
-export async function createOrUpdateList(
-  listId: string,
-  feedContent?: string
-): Promise<void> {
-  if (!listId) {
-    throw new Error("listId is required");
-  }
-
-  try {
-    const now = new Date();
-
-    // First check if list exists
-    const existingList = await prisma.list.findUnique({
-      where: { id: listId },
-    });
-
-    if (existingList) {
-      // Update existing list
-      await prisma.list.update({
-        where: { id: listId },
-        data: {
-          goodreadsUrl: feedContent,
-          date: now,
-          // Only update wrapped status if it's not already true
-          wrapped: existingList.wrapped || false,
-        },
-      });
-    } else {
-      // Create new list
-      await prisma.list.create({
-        data: {
-          id: listId,
-          goodreadsUrl: feedContent,
-          date: now,
-          wrapped: false,
-        },
-      });
-    }
-  } catch (e) {
-    console.error("Error in createOrUpdateList:", e);
-    throw new Error("Failed to create or update list");
-  }
 }
 
 function extractGoodReadsBook(item: any): BookItem {
@@ -138,96 +88,4 @@ function extractGoodReadsBook(item: any): BookItem {
     average_rating: parseFloat(item.average_rating),
     isbn: item.isbn || "",
   };
-}
-
-export async function createBookIfNeeded(
-  bookItem: BookItem,
-  feedContent: string
-): Promise<void> {
-  const thresholdDate = new Date(2024, 0, 1);
-  if (
-    bookItem.dateRead > thresholdDate &&
-    (await prisma.book.findFirst({
-      where: {
-        AND: {
-          listId: feedContent,
-          title: bookItem.title.toString(),
-          author: bookItem.author,
-        },
-      },
-    })) === null
-  ) {
-
-    // const getGoogleId = await searchBooks(bookItem.title, bookItem.author);
-    
-    // // Add null check before accessing [0]
-    // if (!getGoogleId || !Array.isArray(getGoogleId) || getGoogleId.length === 0) {
-    //   console.log("Expected array is undefined or empty");
-    //   // Provide a fallback value or return early
-    //   return; // or return a default value
-    // }
-    
-    // // Now it's safe to access [0]
-    // const googleId = getGoogleId[0].id;
-    
-    // // Add half-second delay before making the image request
-
-    
-    const coverImage = bookItem.thumbnail //await checkImageHash(`https://books.google.com/books/content?id=${googleId}&printsec=frontcover&img=1&zoom=0&edge=curl&source=gbs_api`)
-
-    await prisma.book.create({
-      data: {
-        title: bookItem.title.toString(),
-        author: bookItem.author,
-        goodReadsLink: bookItem.link,
-        coverImage: coverImage,
-        thumbnail: bookItem.thumbnail,
-        rating: bookItem.rating,
-        pages: bookItem.pages,
-        dateRead: bookItem.dateRead,
-        average_rating: bookItem.average_rating,
-        isbn: String(bookItem.isbn),
-        listId: feedContent,
-      },
-    });
-  }
-}
-
-export async function addSearchedBook(
-  bookItem: BookItem,
-  feedContent: string
-): Promise<void> {
-  await createOrUpdateList(feedContent);
-
-  if (
-    (await prisma.book.findFirst({
-      where: {
-        AND: {
-          listId: feedContent,
-          title: bookItem.title,
-          author: bookItem.author,
-        },
-      },
-    })) === null
-  ) {
-    const getGoogleId = await searchBooks(bookItem.title, bookItem.author);
-    const googleId = getGoogleId[0].id;
-    const coverImage = await checkImageHash(`https://books.google.com/books/content?id=${googleId}&printsec=frontcover&img=1&zoom=0&edge=curl&source=gbs_api`)
-
-    await prisma.book.create({
-      data: {
-        title: bookItem.title,
-        author: bookItem.author,
-        goodReadsLink: bookItem.link,
-        thumbnail: bookItem.thumbnail,
-        coverImage: coverImage,
-        rating: bookItem.rating,
-        pages: bookItem.pages,
-        dateRead: bookItem.dateRead,
-        average_rating: bookItem.average_rating,
-        isbn: bookItem.isbn,
-        listId: feedContent,
-      },
-    });
-  }
 }
