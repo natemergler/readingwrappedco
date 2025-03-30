@@ -81,7 +81,12 @@ function extractGoodReadsBook(item: any): BookItem {
     author: item.author_name || "Unknown author",
     link: item.link || "",
     thumbnail: item.book_image_url || "",
-    coverImage: item.book_image_url || "",
+    coverImage:
+      item.book_large_image_url ||
+      item.book_medium_image_url ||
+      item.book_small_image_url ||
+      item.book_image_url ||
+      "",
     rating: parseFloat(item.user_rating),
     pages: parseFloat(item.book?.num_pages),
     dateRead: new Date(item.user_read_at) || "",
