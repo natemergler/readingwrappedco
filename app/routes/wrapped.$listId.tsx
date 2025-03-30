@@ -1,4 +1,4 @@
-import { Book } from "@prisma/client";
+import { Book, WrapperBook, Wrapper } from "@prisma/client";
 import { LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { motion } from "motion/react";
@@ -7,21 +7,29 @@ import BookItem from "~/components/BookItem";
 import IntroAnim from "~/components/introAnim";
 import { prisma } from "~/db.server";
 
+// Define proper types for loader data
+interface LoaderData {
+  data: Wrapper;
+  bookList: (WrapperBook & { book: Book })[];
+}
+
 export async function loader({ params }: LoaderFunctionArgs) {
-  const books = await prisma.book.findMany({
-    where: { listId: params.listId },
-    orderBy: { dateRead: "asc" },
+  const books = await prisma.wrapperBook.findMany({
+    where: { wrapperId: params.listId },
+    include: { book: true },
   });
 
   const wrapped = await prisma.wrapper.findFirst({
     where: { id: params.listId },
   });
+  
   return Response.json({ data: wrapped, bookList: books });
 }
 
 // Main component
 export default function Index() {
-  const { data, bookList } = useLoaderData() as any;
+  // Use proper type annotation
+  const { data, bookList } = useLoaderData<typeof loader>() as LoaderData;
   const constraintsRef = useRef(null);
 
   function handleBookClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -86,13 +94,13 @@ export default function Index() {
           booksCount={bookList.length}
           pages={data.totalPages}
           averageRating={data.averageRating}
-          shortUrl={"/wrapped"+data.url}
+          shortUrl={"/wrapped" + data.url}
         />
         <div
           id="dynamic-grid"
           className="flex flex-wrap gap-4 p-4 w-full h-[calc(100%-300px)]"
         >
-          {bookList.map((book: Book, index: number) => (
+          {bookList.map((book: WrapperBook & { book: Book }, index: number) => (
             <motion.div
               drag
               dragConstraints={constraintsRef}
@@ -110,7 +118,8 @@ export default function Index() {
               onClick={handleBookClick}
               style={{ zIndex: index + 1 }}
             >
-              <BookItem imageUrl={book.coverImage} title={book.title} />
+              {/* Fixed property access */}
+              <BookItem imageUrl={book.book.coverImage} title={book.book.title} />
             </motion.div>
           ))}
         </div>

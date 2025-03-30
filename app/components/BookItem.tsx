@@ -15,7 +15,7 @@ const BookItem = ({ imageUrl, title }: BookItemProps) => {
         <div className="relative shadow-lg hover:shadow-xl rounded">
           <img
             draggable="false"
-            src={imageUrl || DEFAULT_IMAGE}
+            src={imageUrl}
             alt={imageUrl ? `Cover of ${title}` : "No cover image"}
             className="w-full h-full object-cover rounded transform perspective-800 rotate-y-3 hover:rotate-y-0 transition-transform duration-300"
           />
