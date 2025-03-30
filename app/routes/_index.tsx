@@ -100,7 +100,7 @@ export default function Index() {
             your Goodreads URL
           </a>{" "}
           to generate a reading wrap-up. <br />
-          or alternatively, click edit to make a list.
+          or click edit to make an empty list.
         </p>
         <Form method="post" className="gap-2 flex flex-col">
           <Input
