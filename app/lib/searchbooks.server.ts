@@ -31,18 +31,21 @@ export async function parseSearchResults(search: OpenLibraryBook[]) : Promise<Bo
   if (!search || search.length === 0) {
     return [];
   }
-  const books: BookItem[] = search.map((book: OpenLibraryBook) => ({
+  const books: BookItem[] = search.map((book: OpenLibraryBook) => {
+    const coverImage = book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg` : "https://dryofg8nmyqjw.cloudfront.net/images/no-cover.png";
+    const thumbnail = book.cover_i ?`https://covers.openlibrary.org/b/id/${book.cover_i}-S.jpg` : "https://dryofg8nmyqjw.cloudfront.net/images/no-cover.png";
+    return {
     title: book.title,
     author: book.author_name.join(', ') || "",
     link: `https://openlibrary.org/search?q=${encodeURIComponent(book.title)}`,
-    thumbnail:  `https://covers.openlibrary.org/b/id/${book.cover_i}-S.jpg` || "",
-    coverImage: `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg` || "",
+    thumbnail:  coverImage,
+    coverImage: thumbnail,
     rating: 0,
     pages: book.number_of_pages_median || 0,
     dateRead: new Date(),
     average_rating: 0,
     isbn: book.isbn ? book.isbn[0] : "",
-
-  }));
+  }
+  });
   return books;
 }
