@@ -73,7 +73,7 @@ export default function IntroAnim({
         initial={{ scaleY: 0 }}
         animate={{ scaleY: 1 }}
         transition={{ type: "spring", bounce: 0.4, delay: 1.5 }}
-        className="text-md md:text-3xl font-normal my-3 flex items-center justify-center gap-1"
+        className="text-md md:text-3xl font-normal my-3 flex items-center justify-end gap-1"
       >
         Average Rating:&nbsp;
         <div className="flex">

@@ -13,7 +13,7 @@ import {
 } from "../components/ui/table";
 import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Input } from "~/components/ui/input";
-import { searchBooks } from "~/lib/searchbooks.server";
+import { parseSearchResults, searchBooks } from "~/lib/searchbooks.server";
 import { addSearchedBook } from "~/lib/dbfunctions.server";
 import { createOrUpdateList } from "~/lib/dbfunctions.server";
 import { commitSession, getSession } from "~/sessions";
@@ -112,7 +112,8 @@ export async function action({ request }: ActionFunctionArgs) {
       return Response.json({ ok: true });
 
     case "search":
-      const searchedBooks = await searchBooks(formData.get("search") as string);
+      const search = await searchBooks(formData.get("search") as string);
+      const searchedBooks = await parseSearchResults(search);
       return Response.json({ searchBooks: searchedBooks });
 
     case "add":
