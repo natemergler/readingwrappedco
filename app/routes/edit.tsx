@@ -13,7 +13,7 @@ import {
 } from "../components/ui/table";
 import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Input } from "~/components/ui/input";
-import { parseSearchedResponse, searchBooks } from "~/lib/googlebooks.server";
+import { searchBooks } from "~/lib/searchbooks.server";
 import { addSearchedBook } from "~/lib/dbfunctions.server";
 import { createOrUpdateList } from "~/lib/dbfunctions.server";
 import { commitSession, getSession } from "~/sessions";
@@ -112,8 +112,7 @@ export async function action({ request }: ActionFunctionArgs) {
       return Response.json({ ok: true });
 
     case "search":
-      const search = await searchBooks(formData.get("search") as string);
-      const searchedBooks = await parseSearchedResponse(search);
+      const searchedBooks = await searchBooks(formData.get("search") as string);
       return Response.json({ searchBooks: searchedBooks });
 
     case "add":
@@ -207,7 +206,7 @@ export default function Edit() {
             className="flex-auto w-64"
             type="text"
             name="search"
-            placeholder="Search Google Books"
+            placeholder="Search Books"
           />
           {fetcher.state === "idle" ? (
             <Button
@@ -223,18 +222,12 @@ export default function Edit() {
               Searching
             </Button>
           )}                
-          <a href="https://www.google.com">
-          <img
-            src="https://books.google.com/googlebooks/images/poweredby.png"
-            style={{ border: 0 }}
-          />
-        </a>
         </fetcher.Form>
         {formData?.searchBooks && (
           <div>
             <Table>
               <TableCaption>
-                Google Books Search Results
+                Search Results
               </TableCaption>
               <TableHeader>
                 <TableRow>
