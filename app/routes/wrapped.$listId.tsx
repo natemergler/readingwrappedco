@@ -88,7 +88,7 @@ export default function Index() {
   }, []);
 
   return (
-    <div className="items-center justify-center w-screen h-screen overflow-hidden">
+    <div className="items-center justify-center w-[95vw] h-[95vh] overflow-hidden">
       <motion.div ref={constraintsRef} className="w-full h-full">
         <IntroAnim
           booksCount={bookList.length}

@@ -13,7 +13,7 @@ import {
 } from "../components/ui/table";
 import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Input } from "~/components/ui/input";
-import { parseSearchedResponse, searchBooks } from "~/lib/googlebooks.server";
+import { parseSearchResults, searchBooks } from "~/lib/searchbooks.server";
 import { addSearchedBook } from "~/lib/dbfunctions.server";
 import { createOrUpdateList } from "~/lib/dbfunctions.server";
 import { commitSession, getSession } from "~/sessions";
@@ -35,15 +35,15 @@ interface SearchBooksData {
 export async function loader({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
   const listId = session.get("listId")?.toString();
-  
+
   console.log("Edit route - Session list ID:", listId);
-  
+
   // If no listId in session, redirect to create a new list
   if (!listId) {
     // Generate a new list ID
     const newSessionId = await initializeListId(session);
     session.set("listId", newSessionId);
-    
+
     return redirect("/edit", {
       headers: {
         "Set-Cookie": await commitSession(session),
@@ -52,42 +52,50 @@ export async function loader({ request }: { request: Request }) {
   }
 
   const list = await prisma.list.findUnique({ where: { id: listId } });
-  
+
   // If list doesn't exist, create an empty one
   if (!list) {
     console.log("No list found, creating empty list for ID:", listId);
     // Create a new empty list with this ID
     await createOrUpdateList(listId, "");
   }
-  
+
   // Fetch books for this list - include the Book relation
-  const books = await prisma.listBook.findMany({ 
-    where: { listId: listId?.toString() }, 
-    orderBy: { dateRead: 'asc' },
-    include: { book: true } // Include the related Book entity
+  const books = await prisma.listBook.findMany({
+    where: { listId: listId?.toString() },
+    orderBy: { dateRead: "asc" },
+    include: { book: true }, // Include the related Book entity
   });
-  
+
   console.log(`Found ${books.length} books for list ID ${listId}`);
-  
-  return Response.json({ 
-    books, 
-    listId,
-    date: session.get("date")
-  }, {
-    headers: {
-      "Set-Cookie": await commitSession(session)
+
+  return Response.json(
+    {
+      books,
+      listId,
+      date: session.get("date"),
+    },
+    {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
     }
-  });
+  );
 }
 
 export async function action({ request }: ActionFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const listId = session.get("listId");
   const formData = await request.formData();
-  const action = formData.get("rating") ? "rating" :
-                 formData.get("delete") ? "delete" :
-                 formData.get("search") ? "search" :
-                 formData.get("add") ? "add" : null;
+  const action = formData.get("rating")
+    ? "rating"
+    : formData.get("delete")
+    ? "delete"
+    : formData.get("search")
+    ? "search"
+    : formData.get("add")
+    ? "add"
+    : null;
 
   switch (action) {
     case "rating":
@@ -105,7 +113,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     case "search":
       const search = await searchBooks(formData.get("search") as string);
-      const searchedBooks = await parseSearchedResponse(search);
+      const searchedBooks = await parseSearchResults(search);
       return Response.json({ searchBooks: searchedBooks });
 
     case "add":
@@ -141,7 +149,9 @@ export default function Edit() {
             className="flex justify-center items-center"
           >
             <form action="/wrapped" method="post">
-              <Button variant={"magic"} type="submit">Wrap Up Your List</Button>
+              <Button variant={"magic"} type="submit">
+                Wrap Up Your List
+              </Button>
             </form>
           </motion.div>
         )}
@@ -197,7 +207,7 @@ export default function Edit() {
             className="flex-auto w-64"
             type="text"
             name="search"
-            placeholder="Search to add books — The more specific your terms, the better."
+            placeholder="Search Books"
           />
           {fetcher.state === "idle" ? (
             <Button
@@ -212,12 +222,14 @@ export default function Edit() {
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Searching
             </Button>
-          )}
+          )}                
         </fetcher.Form>
         {formData?.searchBooks && (
           <div>
             <Table>
-              <TableCaption>Search Results — If your result is not found, try more specific search terms.</TableCaption>
+              <TableCaption>
+                Search Results
+              </TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Cover</TableHead>

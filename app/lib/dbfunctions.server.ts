@@ -1,6 +1,7 @@
 import { Session } from "@remix-run/node";
 import { nanoid } from "nanoid";
 import { prisma } from "~/db.server";
+import { BookItem } from "./rssParser.server";
 
 export async function initializeListId(session: Session) {
     let randomId = nanoid(8);
@@ -10,29 +11,7 @@ export async function initializeListId(session: Session) {
     return randomId;
   }
 
-import { imageHash } from "image-hash";
-import { BookItem } from "./rssParser.server";
 
-// Known hash for the default/placeholder Google Books cover image
-const PLACEHOLDER_HASH = "ffffffffffffe007e007e007ff9ff81ff83fffff80018001ffffffffffffffff";
-const DEFAULT_IMAGE = "https://dryofg8nmyqjw.cloudfront.net/images/no-cover.png";
-
-export async function checkImageHash(imageUrl: string): Promise<string> {
-  return new Promise((resolve) => {
-    imageHash(
-      imageUrl,
-      16,
-      true,
-      (error: Error, data: string) => {
-        if (data === PLACEHOLDER_HASH || error) {
-          resolve(DEFAULT_IMAGE);
-        } else {
-          resolve(imageUrl);
-        }
-      }
-    );
-  });
-}
 export async function createOrUpdateList(
   listId: string,
   feedContent?: string
@@ -82,7 +61,8 @@ export async function createOrUpdateList(
   listId: string
 ): Promise<void> {
   const thresholdDate = new Date(2024, 0, 1);
-  if (bookItem.dateRead <= thresholdDate) {
+  const cutOffDate = new Date(2025, 0, 1);
+  if (bookItem.dateRead <= thresholdDate || bookItem.dateRead >= cutOffDate) {
     return; // Skip books read before 2024
   }
 
@@ -98,13 +78,12 @@ export async function createOrUpdateList(
 
   // If book doesn't exist, create it
   if (!book) {
-
     book = await prisma.book.create({
       data: {
         title: bookItem.title.toString(),
         author: bookItem.author,
         goodReadsLink: bookItem.link,
-        coverImage: bookItem.thumbnail,
+        coverImage: bookItem.coverImage,
         thumbnail: bookItem.thumbnail,
         pages: bookItem.pages,
         average_rating: bookItem.average_rating,

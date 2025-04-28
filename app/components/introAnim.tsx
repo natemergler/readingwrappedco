@@ -1,7 +1,7 @@
 import { Star } from "lucide-react";
 import { motion } from "motion/react";
 import NumberTicker from "./ui/basic-number-ticker";
-import { Link } from "@remix-run/react"
+import { Link } from "@remix-run/react";
 
 interface IntroProps {
   booksCount?: number;
@@ -22,14 +22,16 @@ export default function IntroAnim({
     <motion.div
       animate={{ x: 0 }}
       transition={{ type: "spring", bounce: 0.4 }}
-      className="text-4xl font-bold text-right p-4"
+      className="text-lg text-center md:text-4xl font-bold md:text-right p-4"
     >
-      <h2><Link to={shortUrl}>readingwrapped.co{shortUrl}</Link></h2>
+      <h2>
+        <Link to={shortUrl}>readingwrapped.co{shortUrl}</Link>
+      </h2>
       <motion.h4
         initial={{ scaleY: 0 }}
         animate={{ scaleY: 1 }}
         transition={{ type: "spring", bounce: 0.4, delay: 0.5 }}
-        className="text-2xl font-normal"
+        className="text-lg md:text-2xl font-normal"
       >
         Your 2024 reading year in review
       </motion.h4>
@@ -37,7 +39,7 @@ export default function IntroAnim({
         initial={{ scaleY: 0 }}
         animate={{ scaleY: 1 }}
         transition={{ type: "spring", bounce: 0.4, delay: 1 }}
-        className="text-3xl font-normal my-3"
+        className="text-md md:text-3xl font-normal my-3"
       >
         <NumberTicker
           from={0}
@@ -54,7 +56,7 @@ export default function IntroAnim({
         initial={{ scaleY: 0 }}
         animate={{ scaleY: 1 }}
         transition={{ type: "spring", bounce: 0.4, delay: 1 }}
-        className="text-3xl font-normal my-3"
+        className="text-md md:text-3xl font-normal my-3"
       >
         <NumberTicker
           from={0}
@@ -71,7 +73,7 @@ export default function IntroAnim({
         initial={{ scaleY: 0 }}
         animate={{ scaleY: 1 }}
         transition={{ type: "spring", bounce: 0.4, delay: 1.5 }}
-        className="text-3xl font-normal my-3 flex items-center justify-end gap-1"
+        className="text-md md:text-3xl font-normal my-3 flex items-center justify-end gap-1"
       >
         Average Rating:&nbsp;
         <div className="flex">
@@ -91,7 +93,7 @@ export default function IntroAnim({
                 whileHover={{ scale: 1.2, rotate: 360 }}
               >
                 <Star
-                  className={`w-6 h-6 ${
+                  className={`w-3 h-3 md:w-6 md:h-6 ${
                     star <= averageRating
                       ? "fill-yellow-400 text-yellow-400"
                       : "text-gray-300"
