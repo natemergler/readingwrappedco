@@ -15,7 +15,7 @@ interface OpenLibraryResponse {
 }
 
 export async function searchBooks(query?: string) : Promise<OpenLibraryBook[]> {
-  const endpoint = OPEN_LIBRARY_SEARCH_API + "q=" + query;
+  const endpoint = OPEN_LIBRARY_SEARCH_API + "q=" + query + "&limit=10";
   const response = await fetch(endpoint);
   if (!response.ok) {
     throw new Error("Network response was not ok");
