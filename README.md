@@ -1,6 +1,27 @@
-# Welcome to Remix!
+# Reading Wrapped
 
-- 📖 [Remix docs](https://remix.run/docs)
+Show off your year in books. (Website currently down but should return soon)
+
+<details>
+    <summary>Screenshots</summary>
+    
+![Reading Wrapped](https://github.com/user-attachments/assets/f81182bf-55f3-4a2b-b341-b8b9a9fc8522)
+
+The home page to import a Goodreads list if you have one.
+
+![Edit your list](https://github.com/user-attachments/assets/598dba78-293f-4a11-884c-d5c3fbe8ff43)
+
+Edit your list by removing books, adding books, and change ratings
+
+![Your Reading Wrapped](https://github.com/user-attachments/assets/656e6561-a7af-4754-a364-3b91791cf8c8)
+
+See your wrapped page! Share your public url to show your friends.
+
+![Grid hater](https://github.com/user-attachments/assets/9a793451-9bbc-4e64-af15-0bfc3843a154)
+
+Sort your books how you'd like.
+
+</details>
 
 ## Development
 
@@ -26,15 +47,5 @@ npm start
 
 Now you'll need to pick a host to deploy it to.
 
-### DIY
 
-If you're familiar with deploying Node applications, the built-in Remix app server is production-ready.
 
-Make sure to deploy the output of `npm run build`
-
-- `build/server`
-- `build/client`
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever css framework you prefer. See the [Vite docs on css](https://vitejs.dev/guide/features.html#css) for more information.
